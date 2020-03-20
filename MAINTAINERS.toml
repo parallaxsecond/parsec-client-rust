@@ -1,0 +1,63 @@
+# parsec-client-rust maintainers file
+#
+# This file lists the maintainers of the parallaxsecond/parsec-client-rust
+# project.
+#
+# Its structure is inspired from the maintainers files in the Docker Github
+# repositories. Please see the MAINTAINERS file in docker/opensource for more
+# information.
+
+[maintainers]
+
+# Core maintainers of the project.
+
+    [maintainers.core]
+    people = [
+      "adamparco",
+      "anta5010",
+      "heavypackets",
+      "hug-dev",
+      "ionut-arm",
+      "justincormack",
+      "paulhowardarm",
+    ]
+
+[people]
+
+# A reference list of all people associated with the project.
+
+    [people.adamparco]
+    Name = "Adam Parco"
+    Email = "adam.parco@docker.com"
+    GitHub = "adamparco"
+
+    [people.anta5010]
+    Name = "Anton Antonov"
+    Email = "anton.antonov@arm.com"
+    GitHub = "anta5010"
+
+    [people.heavypackets]
+    Name = "Sabree Blackmon"
+    Email = "sabree.blackmon@docker.com"
+    GitHub = "heavypackets"
+
+    [people.hug-dev]
+    Name = "Hugues de Valon"
+    Email = "hugues.devalon@arm.com"
+    GitHub = "hug-dev"
+
+    [people.ionut-arm]
+    Name = "Ionut Mihalcea"
+    Email = "ionut.mihalcea@docker.com"
+    GitHub = "ionut-arm"
+
+    [people.justincormack]
+    Name = "Justin Cormack"
+    Email = "justin.cormack@docker.com"
+    GitHub = "justincormack"
+
+    [people.paulhowardarm]
+    Name = "Paul Howard"
+    Email = "paul.howard@arm.com"
+    GitHub = "paulhowardarm"
+
