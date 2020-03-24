@@ -1,0 +1,19 @@
+[package]
+name = "parsec-client"
+version = "0.1.0"
+authors = ["Ionut Mihalcea <ionut.mihalcea@arm.com>",
+           "Hugues de Valon <hugues.devalon@arm.com>"]
+description = "Parsec Client library for the Rust ecosystem"
+license = "Apache-2.0"
+repository = "https://github.com/parallaxsecond/parsec-client-rust"
+readme = "README.md"
+keywords = ["parsec"]
+categories = ["development-tools"]
+edition = "2018"
+
+[dependencies]
+parsec-interface = "0.10.0"
+num = "0.2.1"
+rand = "0.7.3"
+log = "0.4.8"
+derivative = "2.0.2"
