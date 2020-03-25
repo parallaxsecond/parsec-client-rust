@@ -16,11 +16,12 @@
 
 use super::request_handler::RequestHandler;
 use crate::auth::AuthenticationData;
+use crate::error::{ClientErrorKind, Error, Result};
 use derivative::Derivative;
 use parsec_interface::operations::{Convert, NativeOperation, NativeResult};
 use parsec_interface::operations_protobuf::ProtobufConverter;
 use parsec_interface::requests::{
-    request::RequestHeader, BodyType, ProviderID, Request, Response, ResponseStatus, Result,
+    request::RequestHeader, BodyType, Opcode, ProviderID, Request, Response, ResponseStatus,
 };
 
 /// OperationHandler structure to send a `NativeOperation` and get a `NativeResult`.
@@ -38,7 +39,7 @@ pub struct OperationHandler {
 
 #[allow(clippy::new_without_default)]
 impl OperationHandler {
-    /// Creates a OperationHandler instance. The request handler uses a timeout of 5 seconds on reads
+    /// Creates an OperationHandler instance. The request handler uses a timeout of 5 seconds on reads
     /// and writes on the socket. It uses the version 1.0 to form request, the direct
     /// authentication method and protobuf format as content type.
     pub fn new() -> OperationHandler {
@@ -52,7 +53,10 @@ impl OperationHandler {
         auth: &AuthenticationData,
     ) -> Result<Request> {
         let opcode = operation.opcode();
-        let body = self.converter.operation_to_body(operation)?;
+        let body = self
+            .converter
+            .operation_to_body(operation)
+            .map_err(ClientErrorKind::Interface)?;
         let header = RequestHeader {
             version_maj: self.version_maj,
             version_min: self.version_min,
@@ -71,13 +75,23 @@ impl OperationHandler {
         })
     }
 
-    fn response_to_result(&self, response: Response) -> Result<NativeResult> {
+    fn response_to_result(
+        &self,
+        response: Response,
+        expected_opcode: Opcode,
+    ) -> Result<NativeResult> {
         let status = response.header.status;
         if status != ResponseStatus::Success {
-            return Err(status);
+            return Err(Error::Service(status));
         }
         let opcode = response.header.opcode;
-        self.converter.body_to_result(response.body, opcode)
+        if opcode != expected_opcode {
+            return Err(Error::Client(ClientErrorKind::InvalidServiceResponseType));
+        }
+        Ok(self
+            .converter
+            .body_to_result(response.body, opcode)
+            .map_err(ClientErrorKind::Interface)?)
     }
 
     /// Send an operation to a specific provider and get a result.
@@ -85,17 +99,19 @@ impl OperationHandler {
     /// # Errors
     ///
     /// If the conversions between operation to request or between response to result fail, returns
-    /// a serializing or deserializing error. Returns an error if the operation itself failed.
+    /// a serializing or deserializing error. Returns an error if the operation itself failed. If the
+    /// opcode is different between request and response, `InvalidServiceResponseType` is returned.
     pub fn process_operation(
         &self,
         operation: NativeOperation,
         provider: ProviderID,
         auth: &AuthenticationData,
     ) -> Result<NativeResult> {
+        let req_opcode = operation.opcode();
         let request = self.operation_to_request(operation, provider, auth)?;
 
         let response = self.request_client.process_request(request)?;
-        self.response_to_result(response)
+        self.response_to_result(response, req_opcode)
     }
 }
 

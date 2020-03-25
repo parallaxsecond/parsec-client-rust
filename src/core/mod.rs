@@ -18,6 +18,7 @@ mod operation_handler;
 mod request_handler;
 
 use crate::auth::AuthenticationData;
+use crate::error::{ClientErrorKind, Error, Result};
 use operation_handler::OperationHandler;
 use parsec_interface::operations::list_opcodes::Operation as ListOpcodes;
 use parsec_interface::operations::list_providers::{Operation as ListProviders, ProviderInfo};
@@ -31,9 +32,8 @@ use parsec_interface::operations::psa_key_attributes::KeyAttributes;
 use parsec_interface::operations::psa_sign_hash::Operation as PsaSignHash;
 use parsec_interface::operations::psa_verify_hash::Operation as PsaVerifyHash;
 use parsec_interface::operations::{NativeOperation, NativeResult};
+use parsec_interface::requests::Opcode;
 use parsec_interface::requests::ProviderID;
-use parsec_interface::requests::Result;
-use parsec_interface::requests::{Opcode, ResponseStatus};
 use std::collections::HashSet;
 
 /// Core client for Parsec service
@@ -65,7 +65,9 @@ impl CoreClient {
         if let NativeResult::ListOpcodes(res) = res {
             Ok(res.opcodes)
         } else {
-            Err(ResponseStatus::InvalidHeader)
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
         }
     }
 
@@ -80,7 +82,9 @@ impl CoreClient {
         if let NativeResult::ListProviders(res) = res {
             Ok(res.providers)
         } else {
-            Err(ResponseStatus::InvalidHeader)
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
         }
     }
 
@@ -165,7 +169,9 @@ impl CoreClient {
         if let NativeResult::PsaExportPublicKey(res) = res {
             Ok(res.data)
         } else {
-            Err(ResponseStatus::InvalidHeader)
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
         }
     }
 
@@ -192,7 +198,9 @@ impl CoreClient {
         if let NativeResult::PsaSignHash(res) = res {
             Ok(res.signature)
         } else {
-            Err(ResponseStatus::InvalidHeader)
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
         }
     }
 

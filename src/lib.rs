@@ -45,5 +45,6 @@
 
 pub mod auth;
 mod core;
+pub mod error;
 
 pub use crate::core::CoreClient;

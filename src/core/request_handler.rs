@@ -14,7 +14,8 @@
 // limitations under the License.
 #![allow(dead_code)]
 
-use parsec_interface::requests::{Request, Response, Result};
+use crate::error::{ClientErrorKind, Error, Result};
+use parsec_interface::requests::{Request, Response};
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -34,13 +35,19 @@ impl RequestHandler {
     /// Send a request and get a response.
     pub fn process_request(&self, request: Request) -> Result<Response> {
         // Try to connect once, wait for a timeout until trying again.
-        let mut stream = UnixStream::connect(&self.socket_path)?;
+        let mut stream = UnixStream::connect(&self.socket_path).map_err(ClientErrorKind::Ipc)?;
 
-        stream.set_read_timeout(self.timeout)?;
-        stream.set_write_timeout(self.timeout)?;
+        stream
+            .set_read_timeout(self.timeout)
+            .map_err(ClientErrorKind::Ipc)?;
+        stream
+            .set_write_timeout(self.timeout)
+            .map_err(ClientErrorKind::Ipc)?;
 
-        request.write_to_stream(&mut stream)?;
-        Response::read_from_stream(&mut stream, self.max_body_size)
+        request
+            .write_to_stream(&mut stream)
+            .map_err(ClientErrorKind::Interface)?;
+        Ok(Response::read_from_stream(&mut stream, self.max_body_size).map_err(Error::Service)?)
     }
 }
 
