@@ -29,12 +29,12 @@ use parsec_interface::requests::{
 #[derivative(Debug)]
 pub struct OperationHandler {
     #[derivative(Debug = "ignore")]
-    converter: Box<dyn Convert>,
-    version_maj: u8,
-    version_min: u8,
-    content_type: BodyType,
-    accept_type: BodyType,
-    request_client: RequestHandler,
+    pub converter: Box<dyn Convert>,
+    pub wire_protocol_version_maj: u8,
+    pub wire_protocol_version_min: u8,
+    pub content_type: BodyType,
+    pub accept_type: BodyType,
+    pub request_handler: RequestHandler,
 }
 
 #[allow(clippy::new_without_default)]
@@ -58,8 +58,8 @@ impl OperationHandler {
             .operation_to_body(operation)
             .map_err(ClientErrorKind::Interface)?;
         let header = RequestHeader {
-            version_maj: self.version_maj,
-            version_min: self.version_min,
+            version_maj: self.wire_protocol_version_maj,
+            version_min: self.wire_protocol_version_min,
             provider,
             session: 0, // no provisioning of sessions yet
             content_type: self.content_type,
@@ -110,7 +110,7 @@ impl OperationHandler {
         let req_opcode = operation.opcode();
         let request = self.operation_to_request(operation, provider, auth)?;
 
-        let response = self.request_client.process_request(request)?;
+        let response = self.request_handler.process_request(request)?;
         self.response_to_result(response, req_opcode)
     }
 }
@@ -119,11 +119,28 @@ impl Default for OperationHandler {
     fn default() -> Self {
         OperationHandler {
             converter: Box::from(ProtobufConverter {}),
-            version_maj: 1,
-            version_min: 0,
+            wire_protocol_version_maj: 1,
+            wire_protocol_version_min: 0,
             content_type: BodyType::Protobuf,
             accept_type: BodyType::Protobuf,
-            request_client: Default::default(),
+            request_handler: Default::default(),
         }
+    }
+}
+
+impl crate::CoreClient {
+    /// Set the content type for requests and responses handled by this client
+    pub fn set_request_content_type(&mut self, content_type: BodyType) {
+        self.op_handler.content_type = content_type;
+        self.op_handler.accept_type = content_type;
+        match content_type {
+            BodyType::Protobuf => self.op_handler.converter = Box::from(ProtobufConverter {}),
+        }
+    }
+
+    /// Set the wire protocol version numbers to be used by the client
+    pub fn set_wire_protocol_version(&mut self, version_maj: u8, version_min: u8) {
+        self.op_handler.wire_protocol_version_maj = version_maj;
+        self.op_handler.wire_protocol_version_min = version_min;
     }
 }

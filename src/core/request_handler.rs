@@ -60,3 +60,22 @@ impl Default for RequestHandler {
         }
     }
 }
+
+impl crate::CoreClient {
+    /// Set the maximum body size allowed for requests
+    pub fn set_max_body_size(&mut self, max_body_size: usize) {
+        self.op_handler.request_handler.max_body_size = max_body_size;
+    }
+
+    /// Set the timeout allowed for operations on the IPC used for communicating with the service.
+    ///
+    /// A value of `None` represents "no timeout"
+    pub fn set_ipc_timeout(&mut self, timeout: Option<Duration>) {
+        self.op_handler.request_handler.timeout = timeout;
+    }
+
+    /// Set the location of the Unix Socket path where the service socket can be found
+    pub fn set_socket_path(&mut self, socket_path: PathBuf) {
+        self.op_handler.request_handler.socket_path = socket_path;
+    }
+}

@@ -54,6 +54,11 @@ impl CoreClient {
         }
     }
 
+    /// Update the authentication data of the client
+    pub fn set_auth_data(&mut self, auth_data: AuthenticationData) {
+        self.auth_data = auth_data;
+    }
+
     /// list opcodes
     pub fn list_provider_operations(&self, provider: ProviderID) -> Result<HashSet<Opcode>> {
         let res = self.op_handler.process_operation(
