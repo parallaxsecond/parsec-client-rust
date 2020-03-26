@@ -4,7 +4,7 @@
 use parsec_interface::requests::ResponseStatus;
 
 /// Enum used to denote errors returned to the library user
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     /// Errors originating in the service
     Service(ResponseStatus),
@@ -26,6 +26,34 @@ pub enum ClientErrorKind {
 impl From<ClientErrorKind> for Error {
     fn from(client_error: ClientErrorKind) -> Self {
         Error::Client(client_error)
+    }
+}
+
+impl PartialEq for ClientErrorKind {
+    fn eq(&self, other: &Self) -> bool {
+        match self {
+            ClientErrorKind::Interface(status) => {
+                if let ClientErrorKind::Interface(other_status) = other {
+                    other_status == status
+                } else {
+                    false
+                }
+            }
+            ClientErrorKind::Ipc(error) => {
+                if let ClientErrorKind::Ipc(other_error) = other {
+                    other_error.kind() == error.kind()
+                } else {
+                    false
+                }
+            }
+            ClientErrorKind::InvalidServiceResponseType => {
+                if let ClientErrorKind::InvalidServiceResponseType = other {
+                    true
+                } else {
+                    false
+                }
+            }
+        }
     }
 }
 

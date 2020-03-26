@@ -82,14 +82,20 @@ impl CoreClient {
     }
 
     /// ping
-    pub fn ping(&self) -> Result<()> {
-        let _ = self.op_handler.process_operation(
+    pub fn ping(&self) -> Result<(u8, u8)> {
+        let res = self.op_handler.process_operation(
             NativeOperation::Ping(Ping {}),
             ProviderID::Core,
             &AuthenticationData::None,
         )?;
 
-        Ok(())
+        if let NativeResult::Ping(res) = res {
+            Ok((res.wire_protocol_version_maj, res.wire_protocol_version_min))
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
     }
 
     /// generate key

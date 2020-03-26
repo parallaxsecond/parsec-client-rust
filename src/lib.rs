@@ -34,5 +34,6 @@
 pub mod auth;
 mod core;
 pub mod error;
+mod tests;
 
 pub use crate::core::CoreClient;

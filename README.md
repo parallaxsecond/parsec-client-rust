@@ -16,6 +16,8 @@ This project uses the following third party crates:
 * rand (Apache-2.0)
 * log (Apache-2.0)
 * derivative (MIT and Apache-2.0)
+* mockstream (MIT)
+* uuid (MIT and Apache-2.0)
 
 ## Contributing
 
