@@ -23,3 +23,8 @@ fi
 if cargo clippy -h; then
 	cargo clippy --all-targets -- -D clippy::all -D clippy::cargo
 fi
+
+#############
+# Run tests #
+#############
+RUST_BACKTRACE=1 cargo test

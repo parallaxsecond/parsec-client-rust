@@ -17,3 +17,7 @@ num = "0.2.1"
 rand = "0.7.3"
 log = "0.4.8"
 derivative = "2.0.2"
+
+[dev-dependencies]
+mockstream = "0.0.3"
+uuid = "0.7.4"

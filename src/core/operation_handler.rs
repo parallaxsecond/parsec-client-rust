@@ -22,6 +22,7 @@ pub struct OperationHandler {
     pub wire_protocol_version_min: u8,
     pub content_type: BodyType,
     pub accept_type: BodyType,
+    #[cfg_attr(test, derivative(Debug = "ignore"))]
     pub request_handler: RequestHandler,
 }
 
