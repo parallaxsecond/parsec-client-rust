@@ -1,9 +1,10 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 //! Client library for integration with the Parsec service
-
+pub mod ipc_client;
 mod operation_handler;
 mod request_handler;
+mod testing;
 
 use crate::auth::AuthenticationData;
 use crate::error::{ClientErrorKind, Error, Result};
