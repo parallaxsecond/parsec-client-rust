@@ -1,8 +1,8 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
-use super::{TestCoreClient, DEFAULT_APP_NAME};
+use super::{FailingMockIpc, TestCoreClient, DEFAULT_APP_NAME};
 use crate::error::{ClientErrorKind, Error};
-use mockstream::MockStream;
+use mockstream::{FailingMockStream, MockStream};
 use parsec_interface::operations;
 use parsec_interface::operations::list_providers::ProviderInfo;
 use parsec_interface::operations::psa_algorithm::*;
@@ -15,6 +15,7 @@ use parsec_interface::requests::ResponseStatus;
 use parsec_interface::requests::{request::RequestHeader, Request};
 use parsec_interface::requests::{AuthType, BodyType, Opcode, ProviderID};
 use std::collections::HashSet;
+use std::io::ErrorKind;
 
 const PROTOBUF_CONVERTER: ProtobufConverter = ProtobufConverter {};
 const REQ_HEADER: RequestHeader = RequestHeader {
@@ -409,5 +410,21 @@ fn auth_value_test() {
     assert_eq!(
         String::from_utf8(req.auth.bytes().to_owned()).unwrap(),
         String::from(DEFAULT_APP_NAME)
+    );
+}
+
+#[test]
+fn failing_ipc_test() {
+    let mut client: TestCoreClient = Default::default();
+    client.set_ipc_client(Box::from(FailingMockIpc(FailingMockStream::new(
+        ErrorKind::ConnectionRefused,
+        "connection was refused, so rude",
+        1,
+    ))));
+
+    let err = client.ping().expect_err("Expected to fail");
+    assert_eq!(
+        err,
+        Error::Client(ClientErrorKind::Interface(ResponseStatus::ConnectionError))
     );
 }
