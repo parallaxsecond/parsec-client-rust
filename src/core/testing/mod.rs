@@ -5,7 +5,7 @@ use super::ipc_client::{Connect, ReadWrite};
 use super::CoreClient;
 use crate::auth::AuthenticationData;
 use crate::error::Result;
-use mockstream::SyncMockStream;
+use mockstream::{FailingMockStream, SyncMockStream};
 use std::ops::{Deref, DerefMut};
 
 mod core_tests;
@@ -15,6 +15,14 @@ const DEFAULT_APP_NAME: &str = "default-test-app-name";
 struct MockIpc(SyncMockStream);
 
 impl Connect for MockIpc {
+    fn connect(&self) -> Result<Box<dyn ReadWrite>> {
+        Ok(Box::from(self.0.clone()))
+    }
+}
+
+struct FailingMockIpc(FailingMockStream);
+
+impl Connect for FailingMockIpc {
     fn connect(&self) -> Result<Box<dyn ReadWrite>> {
         Ok(Box::from(self.0.clone()))
     }
