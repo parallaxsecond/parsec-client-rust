@@ -39,13 +39,18 @@ impl Default for RequestHandler {
     }
 }
 
+/// Configuration methods for controlling IPC-level options.
 impl crate::CoreClient {
-    /// Set the maximum body size allowed for requests
+    /// Set the maximum body size allowed for requests.
+    ///
+    /// Defaults to the maximum value of `usize`.
     pub fn set_max_body_size(&mut self, max_body_size: usize) {
         self.op_handler.request_handler.max_body_size = max_body_size;
     }
 
-    /// Set the IPC handler used for communication with the service
+    /// Set the IPC handler used for communication with the service.
+    ///
+    /// By default the [Unix domain socket client](../ipc_client/unix_socket/struct.Client.html) is used.
     pub fn set_ipc_client(&mut self, ipc_client: Box<dyn Connect>) {
         self.op_handler.request_handler.ipc_client = ipc_client;
     }

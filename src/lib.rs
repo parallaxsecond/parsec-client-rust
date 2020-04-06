@@ -1,6 +1,7 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 //! Client library for integration with the Parsec service
+// #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png")] TODO: Set to Parsec logo
 #![deny(
     nonstandard_style,
     const_err,
@@ -31,8 +32,12 @@
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
 
+//! Currently this crate allows interaction with the PARSEC service through
+//! [`CoreClient`](core/struct.CoreClient.html), a low-level client that allows all supported operations to
+//! be performed, requiring all operation parameters to be provided explicitly.
+
 pub mod auth;
-mod core;
+pub mod core;
 pub mod error;
 
 pub use crate::core::ipc_client;

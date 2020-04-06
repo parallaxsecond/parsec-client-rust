@@ -117,8 +117,11 @@ impl Default for OperationHandler {
     }
 }
 
+/// Configuration methods for controlling communication with the service.
 impl crate::CoreClient {
-    /// Set the content type for requests and responses handled by this client
+    /// Set the content type for requests and responses handled by this client.
+    ///
+    /// By default Protobuf will be used for this.
     pub fn set_request_content_type(&mut self, content_type: BodyType) {
         self.op_handler.content_type = content_type;
         self.op_handler.accept_type = content_type;
@@ -127,7 +130,9 @@ impl crate::CoreClient {
         }
     }
 
-    /// Set the wire protocol version numbers to be used by the client
+    /// Set the wire protocol version numbers to be used by the client.
+    ///
+    /// Default version number is 1.0.
     pub fn set_wire_protocol_version(&mut self, version_maj: u8, version_min: u8) {
         self.op_handler.wire_protocol_version_maj = version_maj;
         self.op_handler.wire_protocol_version_min = version_min;
