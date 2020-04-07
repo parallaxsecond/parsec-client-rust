@@ -117,7 +117,7 @@ fn list_provider_operations_test() {
 }
 
 #[test]
-fn generate_key_test() {
+fn psa_generate_key_test() {
     let mut client: TestCoreClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(
         NativeResult::PsaGenerateKey(operations::psa_generate_key::Result {}),
@@ -144,7 +144,7 @@ fn generate_key_test() {
     };
 
     client
-        .generate_key(Provider::Tpm, key_name.clone(), key_attrs.clone())
+        .psa_generate_key(Provider::Tpm, key_name.clone(), key_attrs.clone())
         .expect("failed to generate key");
 
     // Check request:
@@ -161,14 +161,14 @@ fn generate_key_test() {
 }
 
 #[test]
-fn destroy_key_test() {
+fn psa_destroy_key_test() {
     let mut client: TestCoreClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(
         NativeResult::PsaDestroyKey(operations::psa_destroy_key::Result {}),
     ));
     let key_name = String::from("key-name");
     client
-        .destroy_key(Provider::Pkcs11, key_name.clone())
+        .psa_destroy_key(Provider::Pkcs11, key_name.clone())
         .expect("Failed to call destroy key");
 
     // Check request:
@@ -184,7 +184,7 @@ fn destroy_key_test() {
 }
 
 #[test]
-fn import_key_test() {
+fn psa_import_key_test() {
     let mut client: TestCoreClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(NativeResult::PsaImportKey(
         operations::psa_import_key::Result {},
@@ -211,7 +211,7 @@ fn import_key_test() {
     };
     let key_data = vec![0xff_u8; 128];
     client
-        .import_key(
+        .psa_import_key(
             Provider::Pkcs11,
             key_name.clone(),
             key_data.clone(),
@@ -234,7 +234,7 @@ fn import_key_test() {
 }
 
 #[test]
-fn export_public_key_test() {
+fn psa_export_public_key_test() {
     let mut client: TestCoreClient = Default::default();
     let key_data = vec![0xa5; 128];
     client.set_mock_read(&get_response_bytes_from_result(
@@ -247,7 +247,7 @@ fn export_public_key_test() {
     // Check response:
     assert_eq!(
         client
-            .export_public_key(Provider::MbedCrypto, key_name.clone())
+            .psa_export_public_key(Provider::MbedCrypto, key_name.clone())
             .expect("Failed to export public key"),
         key_data
     );
@@ -262,7 +262,7 @@ fn export_public_key_test() {
 }
 
 #[test]
-fn sign_hash_test() {
+fn psa_sign_hash_test() {
     let mut client: TestCoreClient = Default::default();
     let hash = vec![0x77_u8; 32];
     let key_name = String::from("key_name");
@@ -279,7 +279,7 @@ fn sign_hash_test() {
     // Check response:
     assert_eq!(
         client
-            .sign_hash(
+            .psa_sign_hash(
                 Provider::MbedCrypto,
                 key_name.clone(),
                 hash.clone(),
@@ -314,7 +314,7 @@ fn verify_hash_test() {
     ));
 
     client
-        .verify_hash_signature(
+        .psa_verify_hash(
             Provider::MbedCrypto,
             key_name.clone(),
             hash.clone(),
@@ -346,7 +346,7 @@ fn different_response_type_test() {
     ));
     let key_name = String::from("key-name");
     let err = client
-        .destroy_key(Provider::Pkcs11, key_name)
+        .psa_destroy_key(Provider::Pkcs11, key_name)
         .expect_err("Error was expected");
 
     assert_eq!(
@@ -404,7 +404,7 @@ fn auth_value_test() {
     ));
     let key_name = String::from("key-name");
     client
-        .destroy_key(Provider::Pkcs11, key_name)
+        .psa_destroy_key(Provider::Pkcs11, key_name)
         .expect("Failed to call destroy key");
 
     let req = get_req_from_bytes(client.get_mock_write());

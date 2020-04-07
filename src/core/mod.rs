@@ -180,7 +180,7 @@ impl Provider {
 ///};
 ///
 ///client
-///    .generate_key(desired_provider, key_name, key_attrs)
+///    .psa_generate_key(desired_provider, key_name, key_attrs)
 ///    .expect("Failed to create key!");
 ///```
 ///
@@ -281,7 +281,7 @@ impl CoreClient {
     ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_generate_key.html#specific-response-status-codes).
-    pub fn generate_key(
+    pub fn psa_generate_key(
         &self,
         provider: Provider,
         key_name: String,
@@ -304,12 +304,12 @@ impl CoreClient {
     /// Destroy a key.
     ///
     /// Given that keys are namespaced at a provider level, it is
-    /// important to call `destroy_key` on the correct combination of
+    /// important to call `psa_destroy_key` on the correct combination of
     /// `provider` and `key_name`.
     ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_destroy_key.html#specific-response-status-codes).
-    pub fn destroy_key(&self, provider: Provider, key_name: String) -> Result<()> {
+    pub fn psa_destroy_key(&self, provider: Provider, key_name: String) -> Result<()> {
         let op = PsaDestroyKey { key_name };
 
         let _ = self.op_handler.process_operation(
@@ -342,7 +342,7 @@ impl CoreClient {
     ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_import_key.html#specific-response-status-codes).
-    pub fn import_key(
+    pub fn psa_import_key(
         &self,
         provider: Provider,
         key_name: String,
@@ -377,7 +377,7 @@ impl CoreClient {
     ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_export_public_key.html#specific-response-status-codes).
-    pub fn export_public_key(&self, provider: Provider, key_name: String) -> Result<Vec<u8>> {
+    pub fn psa_export_public_key(&self, provider: Provider, key_name: String) -> Result<Vec<u8>> {
         let op = PsaExportPublicKey { key_name };
 
         let res = self.op_handler.process_operation(
@@ -409,7 +409,7 @@ impl CoreClient {
     ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_sign_hash.html#specific-response-status-codes).
-    pub fn sign_hash(
+    pub fn psa_sign_hash(
         &self,
         provider: Provider,
         key_name: String,
@@ -451,7 +451,7 @@ impl CoreClient {
     ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_verify_hash.html#specific-response-status-codes).
-    pub fn verify_hash_signature(
+    pub fn psa_verify_hash(
         &self,
         provider: Provider,
         key_name: String,
