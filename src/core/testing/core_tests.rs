@@ -1,6 +1,7 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 use super::{FailingMockIpc, TestCoreClient, DEFAULT_APP_NAME};
+use crate::core::Provider;
 use crate::error::{ClientErrorKind, Error};
 use mockstream::{FailingMockStream, MockStream};
 use parsec_interface::operations;
@@ -105,7 +106,7 @@ fn list_provider_operations_test() {
         operations::list_opcodes::Result { opcodes },
     )));
     let opcodes = client
-        .list_provider_operations(ProviderID::MbedCrypto)
+        .list_provider_operations(Provider::MbedCrypto)
         .expect("Failed to retrieve opcodes");
     // Check request:
     // ListOpcodes request is empty so no checking to be done
@@ -143,7 +144,7 @@ fn generate_key_test() {
     };
 
     client
-        .generate_key(ProviderID::Tpm, key_name.clone(), key_attrs.clone())
+        .generate_key(Provider::Tpm, key_name.clone(), key_attrs.clone())
         .expect("failed to generate key");
 
     // Check request:
@@ -167,7 +168,7 @@ fn destroy_key_test() {
     ));
     let key_name = String::from("key-name");
     client
-        .destroy_key(ProviderID::Pkcs11, key_name.clone())
+        .destroy_key(Provider::Pkcs11, key_name.clone())
         .expect("Failed to call destroy key");
 
     // Check request:
@@ -211,7 +212,7 @@ fn import_key_test() {
     let key_data = vec![0xff_u8; 128];
     client
         .import_key(
-            ProviderID::Pkcs11,
+            Provider::Pkcs11,
             key_name.clone(),
             key_data.clone(),
             key_attrs.clone(),
@@ -246,7 +247,7 @@ fn export_public_key_test() {
     // Check response:
     assert_eq!(
         client
-            .export_public_key(ProviderID::MbedCrypto, key_name.clone())
+            .export_public_key(Provider::MbedCrypto, key_name.clone())
             .expect("Failed to export public key"),
         key_data
     );
@@ -279,7 +280,7 @@ fn sign_hash_test() {
     assert_eq!(
         client
             .sign_hash(
-                ProviderID::MbedCrypto,
+                Provider::MbedCrypto,
                 key_name.clone(),
                 hash.clone(),
                 sign_algorithm.clone()
@@ -314,7 +315,7 @@ fn verify_hash_test() {
 
     client
         .verify_hash_signature(
-            ProviderID::MbedCrypto,
+            Provider::MbedCrypto,
             key_name.clone(),
             hash.clone(),
             sign_algorithm.clone(),
@@ -345,7 +346,7 @@ fn different_response_type_test() {
     ));
     let key_name = String::from("key-name");
     let err = client
-        .destroy_key(ProviderID::Pkcs11, key_name)
+        .destroy_key(Provider::Pkcs11, key_name)
         .expect_err("Error was expected");
 
     assert_eq!(
@@ -403,7 +404,7 @@ fn auth_value_test() {
     ));
     let key_name = String::from("key-name");
     client
-        .destroy_key(ProviderID::Pkcs11, key_name)
+        .destroy_key(Provider::Pkcs11, key_name)
         .expect("Failed to call destroy key");
 
     let req = get_req_from_bytes(client.get_mock_write());
@@ -427,4 +428,12 @@ fn failing_ipc_test() {
         err,
         Error::Client(ClientErrorKind::Interface(ResponseStatus::ConnectionError))
     );
+}
+
+#[test]
+fn provider_unwrap() {
+    let _ = Provider::Core.uuid();
+    let _ = Provider::Tpm.uuid();
+    let _ = Provider::Pkcs11.uuid();
+    let _ = Provider::MbedCrypto.uuid();
 }
