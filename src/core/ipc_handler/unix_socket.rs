@@ -10,16 +10,16 @@ use std::time::Duration;
 const DEFAULT_SOCKET_PATH: &str = "/tmp/security-daemon-socket";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
 
-/// IPC client for Unix domain sockets
+/// IPC handler for Unix domain sockets
 #[derive(Debug, Clone)]
-pub struct Client {
+pub struct Handler {
     /// Path at which the socket can be found
     path: PathBuf,
     /// Timeout for reads and writes on the streams
     timeout: Option<Duration>,
 }
 
-impl Connect for Client {
+impl Connect for Handler {
     fn connect(&self) -> Result<Box<dyn ReadWrite>> {
         let stream = UnixStream::connect(self.path.clone()).map_err(ClientErrorKind::Ipc)?;
 
@@ -34,16 +34,16 @@ impl Connect for Client {
     }
 }
 
-impl Client {
+impl Handler {
     /// Create new client using given socket path and timeout duration
     pub fn new(path: PathBuf, timeout: Option<Duration>) -> Self {
-        Client { path, timeout }
+        Handler { path, timeout }
     }
 }
 
-impl Default for Client {
+impl Default for Handler {
     fn default() -> Self {
-        Client {
+        Handler {
             path: DEFAULT_SOCKET_PATH.into(),
             timeout: Some(DEFAULT_TIMEOUT),
         }

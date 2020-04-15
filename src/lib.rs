@@ -33,12 +33,12 @@
 #![allow(clippy::multiple_crate_versions)]
 
 //! Currently this crate allows interaction with the PARSEC service through
-//! [`CoreClient`](core/struct.CoreClient.html), a low-level client that allows all supported operations to
-//! be performed, requiring all operation parameters to be provided explicitly.
+//! [`BasicClient`](core/basic_client/struct.BasicClient.html), a low-level client that allows
+//! all supported operations to be performed, requiring all operation parameters
+//! to be provided explicitly.
 
 pub mod auth;
 pub mod core;
 pub mod error;
 
-pub use crate::core::ipc_client;
-pub use crate::core::CoreClient;
+pub use crate::core::basic_client::BasicClient;

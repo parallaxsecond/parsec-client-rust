@@ -1,26 +1,37 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
-use super::ipc_client::{unix_socket, Connect};
+//! Request-level client
+use super::ipc_handler::{unix_socket, Connect};
 use crate::error::{ClientErrorKind, Result};
 use derivative::Derivative;
 use parsec_interface::requests::{Request, Response};
 
 const DEFAULT_MAX_BODY_SIZE: usize = usize::max_value();
 
-/// Low level client structure to send a `Request` and get a `Response`.
+/// Low level client structure optimised for communicating with the service
+/// at a request level of abstraction.
+///
+/// Usage is recommended when fine control over the request header and IPC handler
+/// is needed.
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct RequestHandler {
+pub struct RequestClient {
+    /// Max size for response bodies
+    ///
+    /// Defaults to the max value of `usize` on the current platform
     pub max_body_size: usize,
+    /// Handler for IPC-related functionality
+    ///
+    /// Defaults to using Unix domain sockets
     #[derivative(Debug = "ignore")]
-    pub ipc_client: Box<dyn Connect>,
+    pub ipc_handler: Box<dyn Connect>,
 }
 
-impl RequestHandler {
+impl RequestClient {
     /// Send a request and get a response.
     pub fn process_request(&self, request: Request) -> Result<Response> {
         // Try to connect once, wait for a timeout until trying again.
-        let mut stream = self.ipc_client.connect()?;
+        let mut stream = self.ipc_handler.connect()?;
 
         request
             .write_to_stream(&mut stream)
@@ -30,28 +41,28 @@ impl RequestHandler {
     }
 }
 
-impl Default for RequestHandler {
+impl Default for RequestClient {
     fn default() -> Self {
-        RequestHandler {
+        RequestClient {
             max_body_size: DEFAULT_MAX_BODY_SIZE,
-            ipc_client: Box::from(unix_socket::Client::default()),
+            ipc_handler: Box::from(unix_socket::Handler::default()),
         }
     }
 }
 
 /// Configuration methods for controlling IPC-level options.
-impl crate::CoreClient {
+impl crate::BasicClient {
     /// Set the maximum body size allowed for requests.
     ///
     /// Defaults to the maximum value of `usize`.
     pub fn set_max_body_size(&mut self, max_body_size: usize) {
-        self.op_handler.request_handler.max_body_size = max_body_size;
+        self.op_client.request_client.max_body_size = max_body_size;
     }
 
     /// Set the IPC handler used for communication with the service.
     ///
-    /// By default the [Unix domain socket client](../ipc_client/unix_socket/struct.Client.html) is used.
-    pub fn set_ipc_client(&mut self, ipc_client: Box<dyn Connect>) {
-        self.op_handler.request_handler.ipc_client = ipc_client;
+    /// By default the [Unix domain socket client](../ipc_handler/unix_socket/struct.Client.html) is used.
+    pub fn set_ipc_handler(&mut self, ipc_handler: Box<dyn Connect>) {
+        self.op_client.request_client.ipc_handler = ipc_handler;
     }
 }
