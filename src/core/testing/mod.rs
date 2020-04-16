@@ -1,11 +1,12 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 #![cfg(test)]
-use super::ipc_client::{Connect, ReadWrite};
-use super::CoreClient;
+use super::basic_client::BasicClient;
+use super::ipc_handler::{Connect, ReadWrite};
 use crate::auth::AuthenticationData;
 use crate::error::Result;
 use mockstream::{FailingMockStream, SyncMockStream};
+use parsec_interface::requests::ProviderID;
 use std::ops::{Deref, DerefMut};
 
 mod core_tests;
@@ -28,12 +29,12 @@ impl Connect for FailingMockIpc {
     }
 }
 
-struct TestCoreClient {
-    core_client: CoreClient,
+struct TestBasicClient {
+    core_client: BasicClient,
     mock_stream: SyncMockStream,
 }
 
-impl TestCoreClient {
+impl TestBasicClient {
     pub fn set_mock_read(&mut self, bytes: &[u8]) {
         self.mock_stream.push_bytes_to_read(bytes);
     }
@@ -43,32 +44,33 @@ impl TestCoreClient {
     }
 }
 
-impl Deref for TestCoreClient {
-    type Target = CoreClient;
+impl Deref for TestBasicClient {
+    type Target = BasicClient;
 
     fn deref(&self) -> &Self::Target {
         &self.core_client
     }
 }
 
-impl DerefMut for TestCoreClient {
+impl DerefMut for TestBasicClient {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.core_client
     }
 }
 
-impl Default for TestCoreClient {
+impl Default for TestBasicClient {
     fn default() -> Self {
-        let mut client = TestCoreClient {
-            core_client: CoreClient::new(AuthenticationData::AppIdentity(String::from(
-                DEFAULT_APP_NAME,
-            ))),
+        let mut client = TestBasicClient {
+            core_client: BasicClient::new(
+                AuthenticationData::AppIdentity(String::from(DEFAULT_APP_NAME)),
+                ProviderID::Pkcs11,
+            ),
             mock_stream: SyncMockStream::new(),
         };
 
         client
             .core_client
-            .set_ipc_client(Box::from(MockIpc(client.mock_stream.clone())));
+            .set_ipc_handler(Box::from(MockIpc(client.mock_stream.clone())));
         client
     }
 }

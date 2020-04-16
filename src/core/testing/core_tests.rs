@@ -1,7 +1,7 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
-use super::{FailingMockIpc, TestCoreClient, DEFAULT_APP_NAME};
-use crate::core::Provider;
+use super::{FailingMockIpc, TestBasicClient, DEFAULT_APP_NAME};
+use crate::core::ProviderID;
 use crate::error::{ClientErrorKind, Error};
 use mockstream::{FailingMockStream, MockStream};
 use parsec_interface::operations;
@@ -14,14 +14,12 @@ use parsec_interface::operations_protobuf::ProtobufConverter;
 use parsec_interface::requests::Response;
 use parsec_interface::requests::ResponseStatus;
 use parsec_interface::requests::{request::RequestHeader, Request};
-use parsec_interface::requests::{AuthType, BodyType, Opcode, ProviderID};
+use parsec_interface::requests::{AuthType, BodyType, Opcode};
 use std::collections::HashSet;
 use std::io::ErrorKind;
 
 const PROTOBUF_CONVERTER: ProtobufConverter = ProtobufConverter {};
 const REQ_HEADER: RequestHeader = RequestHeader {
-    version_maj: 1,
-    version_min: 0,
     provider: ProviderID::Core,
     session: 0,
     content_type: BodyType::Protobuf,
@@ -55,7 +53,7 @@ fn get_operation_from_req_bytes(bytes: Vec<u8>) -> NativeOperation {
 
 #[test]
 fn ping_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(NativeResult::Ping(
         operations::ping::Result {
             wire_protocol_version_maj: 1,
@@ -71,7 +69,7 @@ fn ping_test() {
 
 #[test]
 fn list_provider_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     let mut provider_info = Vec::new();
     provider_info.push(ProviderInfo {
         uuid: uuid::Uuid::nil(),
@@ -98,7 +96,7 @@ fn list_provider_test() {
 
 #[test]
 fn list_provider_operations_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     let mut opcodes = HashSet::new();
     let _ = opcodes.insert(Opcode::PsaDestroyKey);
     let _ = opcodes.insert(Opcode::PsaGenerateKey);
@@ -106,7 +104,7 @@ fn list_provider_operations_test() {
         operations::list_opcodes::Result { opcodes },
     )));
     let opcodes = client
-        .list_provider_operations(Provider::MbedCrypto)
+        .list_provider_operations(ProviderID::MbedCrypto)
         .expect("Failed to retrieve opcodes");
     // Check request:
     // ListOpcodes request is empty so no checking to be done
@@ -118,7 +116,7 @@ fn list_provider_operations_test() {
 
 #[test]
 fn psa_generate_key_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(
         NativeResult::PsaGenerateKey(operations::psa_generate_key::Result {}),
     ));
@@ -144,7 +142,7 @@ fn psa_generate_key_test() {
     };
 
     client
-        .psa_generate_key(Provider::Tpm, key_name.clone(), key_attrs.clone())
+        .psa_generate_key(key_name.clone(), key_attrs.clone())
         .expect("failed to generate key");
 
     // Check request:
@@ -162,13 +160,13 @@ fn psa_generate_key_test() {
 
 #[test]
 fn psa_destroy_key_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(
         NativeResult::PsaDestroyKey(operations::psa_destroy_key::Result {}),
     ));
     let key_name = String::from("key-name");
     client
-        .psa_destroy_key(Provider::Pkcs11, key_name.clone())
+        .psa_destroy_key(key_name.clone())
         .expect("Failed to call destroy key");
 
     // Check request:
@@ -185,7 +183,7 @@ fn psa_destroy_key_test() {
 
 #[test]
 fn psa_import_key_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(NativeResult::PsaImportKey(
         operations::psa_import_key::Result {},
     )));
@@ -211,12 +209,7 @@ fn psa_import_key_test() {
     };
     let key_data = vec![0xff_u8; 128];
     client
-        .psa_import_key(
-            Provider::Pkcs11,
-            key_name.clone(),
-            key_data.clone(),
-            key_attrs.clone(),
-        )
+        .psa_import_key(key_name.clone(), key_data.clone(), key_attrs.clone())
         .unwrap();
 
     // Check request:
@@ -235,7 +228,7 @@ fn psa_import_key_test() {
 
 #[test]
 fn psa_export_public_key_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     let key_data = vec![0xa5; 128];
     client.set_mock_read(&get_response_bytes_from_result(
         NativeResult::PsaExportPublicKey(operations::psa_export_public_key::Result {
@@ -247,7 +240,7 @@ fn psa_export_public_key_test() {
     // Check response:
     assert_eq!(
         client
-            .psa_export_public_key(Provider::MbedCrypto, key_name.clone())
+            .psa_export_public_key(key_name.clone())
             .expect("Failed to export public key"),
         key_data
     );
@@ -263,7 +256,7 @@ fn psa_export_public_key_test() {
 
 #[test]
 fn psa_sign_hash_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     let hash = vec![0x77_u8; 32];
     let key_name = String::from("key_name");
     let sign_algorithm = AsymmetricSignature::Ecdsa {
@@ -279,12 +272,7 @@ fn psa_sign_hash_test() {
     // Check response:
     assert_eq!(
         client
-            .psa_sign_hash(
-                Provider::MbedCrypto,
-                key_name.clone(),
-                hash.clone(),
-                sign_algorithm.clone()
-            )
+            .psa_sign_hash(key_name.clone(), hash.clone(), sign_algorithm.clone())
             .expect("Failed to sign hash"),
         signature
     );
@@ -302,7 +290,7 @@ fn psa_sign_hash_test() {
 
 #[test]
 fn verify_hash_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     let hash = vec![0x77_u8; 32];
     let key_name = String::from("key_name");
     let sign_algorithm = AsymmetricSignature::Ecdsa {
@@ -315,7 +303,6 @@ fn verify_hash_test() {
 
     client
         .psa_verify_hash(
-            Provider::MbedCrypto,
             key_name.clone(),
             hash.clone(),
             sign_algorithm.clone(),
@@ -340,13 +327,13 @@ fn verify_hash_test() {
 
 #[test]
 fn different_response_type_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(
         NativeResult::PsaVerifyHash(operations::psa_verify_hash::Result {}),
     ));
     let key_name = String::from("key-name");
     let err = client
-        .psa_destroy_key(Provider::Pkcs11, key_name)
+        .psa_destroy_key(key_name)
         .expect_err("Error was expected");
 
     assert_eq!(
@@ -357,7 +344,7 @@ fn different_response_type_test() {
 
 #[test]
 fn response_status_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     let mut stream = MockStream::new();
     let status = ResponseStatus::PsaErrorDataCorrupt;
     let mut resp = Response::from_request_header(REQ_HEADER, ResponseStatus::Success);
@@ -371,7 +358,7 @@ fn response_status_test() {
 
 #[test]
 fn malformed_response_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     client.set_mock_read(&[0xcb_u8; 130]);
     let err = client.ping().expect_err("Error was expected");
 
@@ -383,7 +370,7 @@ fn malformed_response_test() {
 
 #[test]
 fn request_fields_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(NativeResult::Ping(
         operations::ping::Result {
             wire_protocol_version_maj: 1,
@@ -398,13 +385,13 @@ fn request_fields_test() {
 
 #[test]
 fn auth_value_test() {
-    let mut client: TestCoreClient = Default::default();
+    let mut client: TestBasicClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(
         NativeResult::PsaDestroyKey(operations::psa_destroy_key::Result {}),
     ));
     let key_name = String::from("key-name");
     client
-        .psa_destroy_key(Provider::Pkcs11, key_name)
+        .psa_destroy_key(key_name)
         .expect("Failed to call destroy key");
 
     let req = get_req_from_bytes(client.get_mock_write());
@@ -416,8 +403,8 @@ fn auth_value_test() {
 
 #[test]
 fn failing_ipc_test() {
-    let mut client: TestCoreClient = Default::default();
-    client.set_ipc_client(Box::from(FailingMockIpc(FailingMockStream::new(
+    let mut client: TestBasicClient = Default::default();
+    client.set_ipc_handler(Box::from(FailingMockIpc(FailingMockStream::new(
         ErrorKind::ConnectionRefused,
         "connection was refused, so rude",
         1,
@@ -428,12 +415,4 @@ fn failing_ipc_test() {
         err,
         Error::Client(ClientErrorKind::Interface(ResponseStatus::ConnectionError))
     );
-}
-
-#[test]
-fn provider_unwrap() {
-    let _ = Provider::Core.uuid();
-    let _ = Provider::Tpm.uuid();
-    let _ = Provider::Pkcs11.uuid();
-    let _ = Provider::MbedCrypto.uuid();
 }

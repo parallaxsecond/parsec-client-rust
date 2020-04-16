@@ -1,37 +1,45 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
+//! Operation-level client
 #![allow(dead_code)]
 
-use super::request_handler::RequestHandler;
+use super::request_client::RequestClient;
 use crate::auth::AuthenticationData;
 use crate::error::{ClientErrorKind, Error, Result};
 use derivative::Derivative;
 use parsec_interface::operations::{Convert, NativeOperation, NativeResult};
 use parsec_interface::operations_protobuf::ProtobufConverter;
 use parsec_interface::requests::{
-    request::RequestHeader, BodyType, Opcode, ProviderID, Request, Response, ResponseStatus,
+    request::RequestHeader, Opcode, ProviderID, Request, Response, ResponseStatus,
 };
 
-/// OperationHandler structure to send a `NativeOperation` and get a `NativeResult`.
+/// Low-level client optimised for communicating with the Parsec service at an operation level.
+///
+/// Usage is recommended when fine control over how operations are wrapped and processed is needed.
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct OperationHandler {
+pub struct OperationClient {
+    /// Converter that manages request body conversions
+    ///
+    /// Defaults to a Protobuf converter
     #[derivative(Debug = "ignore")]
-    pub converter: Box<dyn Convert>,
-    pub wire_protocol_version_maj: u8,
-    pub wire_protocol_version_min: u8,
-    pub content_type: BodyType,
-    pub accept_type: BodyType,
-    #[cfg_attr(test, derivative(Debug = "ignore"))]
-    pub request_handler: RequestHandler,
+    pub content_converter: Box<dyn Convert>,
+    /// Converter that manages response body conversions
+    ///
+    /// Defaults to a Protobuf converter
+    #[derivative(Debug = "ignore")]
+    pub accept_converter: Box<dyn Convert>,
+    /// Client for request and response objects
+    pub request_client: RequestClient,
 }
 
 #[allow(clippy::new_without_default)]
-impl OperationHandler {
-    /// Creates an OperationHandler instance. The request handler uses a timeout of 5 seconds on reads
-    /// and writes on the socket. It uses the version 1.0 to form request, the direct
-    /// authentication method and protobuf format as content type.
-    pub fn new() -> OperationHandler {
+impl OperationClient {
+    /// Creates an OperationClient instance. The request client uses a timeout of 5
+    /// seconds on reads and writes on the socket. It uses the version 1.0 wire protocol
+    /// to form requests, the direct authentication method and protobuf format as
+    /// content type.
+    pub fn new() -> OperationClient {
         Default::default()
     }
 
@@ -43,16 +51,14 @@ impl OperationHandler {
     ) -> Result<Request> {
         let opcode = operation.opcode();
         let body = self
-            .converter
+            .content_converter
             .operation_to_body(operation)
             .map_err(ClientErrorKind::Interface)?;
         let header = RequestHeader {
-            version_maj: self.wire_protocol_version_maj,
-            version_min: self.wire_protocol_version_min,
             provider,
             session: 0, // no provisioning of sessions yet
-            content_type: self.content_type,
-            accept_type: self.accept_type,
+            content_type: self.content_converter.body_type(),
+            accept_type: self.accept_converter.body_type(),
             auth_type: auth.auth_type(),
             opcode,
         };
@@ -78,7 +84,7 @@ impl OperationHandler {
             return Err(Error::Client(ClientErrorKind::InvalidServiceResponseType));
         }
         Ok(self
-            .converter
+            .accept_converter
             .body_to_result(response.body, opcode)
             .map_err(ClientErrorKind::Interface)?)
     }
@@ -99,42 +105,34 @@ impl OperationHandler {
         let req_opcode = operation.opcode();
         let request = self.operation_to_request(operation, provider, auth)?;
 
-        let response = self.request_handler.process_request(request)?;
+        let response = self.request_client.process_request(request)?;
         self.response_to_result(response, req_opcode)
     }
 }
 
-impl Default for OperationHandler {
+impl Default for OperationClient {
     fn default() -> Self {
-        OperationHandler {
-            converter: Box::from(ProtobufConverter {}),
-            wire_protocol_version_maj: 1,
-            wire_protocol_version_min: 0,
-            content_type: BodyType::Protobuf,
-            accept_type: BodyType::Protobuf,
-            request_handler: Default::default(),
+        OperationClient {
+            content_converter: Box::from(ProtobufConverter {}),
+            accept_converter: Box::from(ProtobufConverter {}),
+            request_client: Default::default(),
         }
     }
 }
 
 /// Configuration methods for controlling communication with the service.
-impl crate::CoreClient {
-    /// Set the content type for requests and responses handled by this client.
+impl crate::BasicClient {
+    /// Set the converter used for request bodies handled by this client.
     ///
     /// By default Protobuf will be used for this.
-    pub fn set_request_content_type(&mut self, content_type: BodyType) {
-        self.op_handler.content_type = content_type;
-        self.op_handler.accept_type = content_type;
-        match content_type {
-            BodyType::Protobuf => self.op_handler.converter = Box::from(ProtobufConverter {}),
-        }
+    pub fn set_request_body_converter(&mut self, content_converter: Box<dyn Convert>) {
+        self.op_client.content_converter = content_converter;
     }
 
-    /// Set the wire protocol version numbers to be used by the client.
+    /// Set the converter used for response bodies handled by this client.
     ///
-    /// Default version number is 1.0.
-    pub fn set_wire_protocol_version(&mut self, version_maj: u8, version_min: u8) {
-        self.op_handler.wire_protocol_version_maj = version_maj;
-        self.op_handler.wire_protocol_version_min = version_min;
+    /// By default Protobuf will be used for this.
+    pub fn set_response_body_converter(&mut self, accept_converter: Box<dyn Convert>) {
+        self.op_client.accept_converter = accept_converter;
     }
 }

@@ -21,6 +21,8 @@ pub enum ClientErrorKind {
     Ipc(::std::io::Error),
     /// The opcode of the response does not match the opcode of the request
     InvalidServiceResponseType,
+    /// The operation is not supported by the selected provider
+    InvalidProvider,
 }
 
 impl From<ClientErrorKind> for Error {
@@ -48,6 +50,13 @@ impl PartialEq for ClientErrorKind {
             }
             ClientErrorKind::InvalidServiceResponseType => {
                 if let ClientErrorKind::InvalidServiceResponseType = other {
+                    true
+                } else {
+                    false
+                }
+            }
+            ClientErrorKind::InvalidProvider => {
+                if let ClientErrorKind::InvalidProvider = other {
                     true
                 } else {
                     false
