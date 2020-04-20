@@ -21,5 +21,5 @@ This project uses the following third party crates:
 
 ## Contributing
 
-Please check the [Contributing](CONTRIBUTING.md) to know more about the contribution process. You can see current contributors [here](https://github.com/parallaxsecond/parsec/blob/master/CONTRIBUTORS.md).
-
+Please check the [**Contribution Guidelines**](https://parallaxsecond.github.io/parsec-book/contributing.html)
+to know more about the contribution process.
