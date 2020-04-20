@@ -180,9 +180,19 @@ impl BasicClient {
         self.auth_data = auth_data;
     }
 
+    /// Retrieve authentication data of the client.
+    pub fn auth_data(&self) -> AuthenticationData {
+        self.auth_data.clone()
+    }
+
     /// Set the provider that the client will be implicitly working with.
     pub fn set_implicit_provider(&mut self, provider: ProviderID) {
         self.implicit_provider = provider;
+    }
+
+    /// Retrieve client's implicit provider.
+    pub fn implicit_provider(&self) -> ProviderID {
+        self.implicit_provider
     }
 
     /// **[Core Operation]** List the opcodes supported by the specified provider.
