@@ -23,6 +23,8 @@ pub enum ClientErrorKind {
     InvalidServiceResponseType,
     /// The operation is not supported by the selected provider
     InvalidProvider,
+    /// Client is missing an implicit provider
+    NoProvider,
 }
 
 impl From<ClientErrorKind> for Error {
@@ -57,6 +59,13 @@ impl PartialEq for ClientErrorKind {
             }
             ClientErrorKind::InvalidProvider => {
                 if let ClientErrorKind::InvalidProvider = other {
+                    true
+                } else {
+                    false
+                }
+            }
+            ClientErrorKind::NoProvider => {
+                if let ClientErrorKind::NoProvider = other {
                     true
                 } else {
                     false

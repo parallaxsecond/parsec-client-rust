@@ -1,8 +1,10 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 use super::{FailingMockIpc, TestBasicClient, DEFAULT_APP_NAME};
+use crate::auth::AuthenticationData;
 use crate::core::ProviderID;
 use crate::error::{ClientErrorKind, Error};
+use crate::BasicClient;
 use mockstream::{FailingMockStream, MockStream};
 use parsec_interface::operations;
 use parsec_interface::operations::list_providers::ProviderInfo;
@@ -95,7 +97,7 @@ fn list_provider_test() {
 }
 
 #[test]
-fn list_provider_operations_test() {
+fn list_opcodes_test() {
     let mut client: TestBasicClient = Default::default();
     let mut opcodes = HashSet::new();
     let _ = opcodes.insert(Opcode::PsaDestroyKey);
@@ -104,7 +106,7 @@ fn list_provider_operations_test() {
         operations::list_opcodes::Result { opcodes },
     )));
     let opcodes = client
-        .list_provider_operations(ProviderID::MbedCrypto)
+        .list_opcodes(ProviderID::MbedCrypto)
         .expect("Failed to retrieve opcodes");
     // Check request:
     // ListOpcodes request is empty so no checking to be done
@@ -112,6 +114,29 @@ fn list_provider_operations_test() {
     // Check response:
     assert_eq!(opcodes.len(), 2);
     assert!(opcodes.contains(&Opcode::PsaGenerateKey) && opcodes.contains(&Opcode::PsaDestroyKey));
+}
+
+#[test]
+fn no_crypto_provider_test() {
+    let client = BasicClient::new(AuthenticationData::AppIdentity(String::from("oops")));
+
+    let res = client
+        .psa_destroy_key(String::from("random key"))
+        .expect_err("Expected a failure!!");
+
+    assert_eq!(res, Error::Client(ClientErrorKind::NoProvider));
+}
+
+#[test]
+fn core_provider_for_crypto_test() {
+    let mut client = BasicClient::new(AuthenticationData::AppIdentity(String::from("oops")));
+
+    client.set_implicit_provider(ProviderID::Core);
+    let res = client
+        .psa_destroy_key(String::from("random key"))
+        .expect_err("Expected a failure!!");
+
+    assert_eq!(res, Error::Client(ClientErrorKind::InvalidProvider));
 }
 
 #[test]
