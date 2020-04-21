@@ -61,12 +61,13 @@ impl DerefMut for TestBasicClient {
 impl Default for TestBasicClient {
     fn default() -> Self {
         let mut client = TestBasicClient {
-            core_client: BasicClient::new(
-                AuthenticationData::AppIdentity(String::from(DEFAULT_APP_NAME)),
-                ProviderID::Pkcs11,
-            ),
+            core_client: BasicClient::new(AuthenticationData::AppIdentity(String::from(
+                DEFAULT_APP_NAME,
+            ))),
             mock_stream: SyncMockStream::new(),
         };
+
+        client.core_client.set_implicit_provider(ProviderID::Pkcs11);
 
         client
             .core_client

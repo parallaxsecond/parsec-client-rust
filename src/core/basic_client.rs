@@ -24,16 +24,23 @@ use std::collections::HashSet;
 /// The client exposes low-level functionality for using the Parsec service.
 /// Below you can see code examples for a few of the operations supported.
 ///
+/// For all cryptographic operations an implicit provider is used which can be
+/// changed between operations. The client starts with no such defined provider
+/// and it is the responsibility of the user to identify and set an appropriate
+/// one. As such, it is critical that before attempting to use cryptographic
+/// operations users call [`list_providers`](#method.list_providers)
+/// and [`list_opcodes`](#method.list_opcodes)
+/// in order to figure out if their desired use case and provider are
+/// available.
+///
 /// Creating a `BasicClient` instance:
 ///```no_run
 ///use parsec_client::auth::AuthenticationData;
 ///use parsec_client::BasicClient;
-///use parsec_client::core::ProviderID;
 ///
 ///let app_name = String::from("app-name");
 ///let app_auth_data = AuthenticationData::AppIdentity(app_name);
-///let desired_provider = ProviderID::Pkcs11;
-///let client: BasicClient = BasicClient::new(app_auth_data, desired_provider);
+///let client: BasicClient = BasicClient::new(app_auth_data);
 ///```
 ///
 /// Performing a Ping operation helps to determine if the service is available
@@ -43,7 +50,7 @@ use std::collections::HashSet;
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
 ///# use parsec_client::core::ProviderID;
-///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")), ProviderID::Pkcs11);
+///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
 ///let res = client.ping();
 ///
 ///if let Ok((wire_prot_v_maj, wire_prot_v_min)) = res {
@@ -65,7 +72,7 @@ use std::collections::HashSet;
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
 ///# use parsec_client::core::ProviderID;
-///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")), ProviderID::Pkcs11);
+///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
 ///use uuid::Uuid;
 ///
 ///// Identify provider by its UUID (in this case, the PKCS11 provider)
@@ -82,22 +89,25 @@ use std::collections::HashSet;
 ///```
 ///
 /// Checking operations supported by the provider we're interested in is done
-/// through the `list_provider_operations` method:
+/// through the `list_opcodes` method:
 ///```no_run
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
 ///# use parsec_client::core::ProviderID;
-///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")), ProviderID::Pkcs11);
+///# let mut client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
 ///use parsec_client::core::Opcode;
 ///
 ///let desired_provider = ProviderID::Pkcs11;
 ///let provider_opcodes = client
-///    .list_provider_operations(desired_provider)
+///    .list_opcodes(desired_provider)
 ///    .expect("Failed to list opcodes");
 ///// Each operation is identified by a specific `Opcode`
 ///assert!(provider_opcodes.contains(&Opcode::PsaGenerateKey));
 ///assert!(provider_opcodes.contains(&Opcode::PsaSignHash));
 ///assert!(provider_opcodes.contains(&Opcode::PsaDestroyKey));
+///
+///// Now that we're certain our desired provider offers all the functionality we need...
+///client.set_implicit_provider(desired_provider);
 ///```
 ///
 /// Creating a key-pair for signing SHA256 digests with RSA PKCS#1 v1.5:
@@ -105,7 +115,7 @@ use std::collections::HashSet;
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
 ///# use parsec_client::core::ProviderID;
-///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")), ProviderID::Pkcs11);
+///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
 ///use parsec_client::core::psa_algorithm::{Algorithm, AsymmetricSignature, Hash};
 ///use parsec_client::core::psa_key_attributes::{KeyAttributes, KeyPolicy, KeyType, UsageFlags};
 ///
@@ -143,35 +153,25 @@ use std::collections::HashSet;
 ///    .psa_generate_key(key_name, key_attrs)
 ///    .expect("Failed to create key!");
 ///```
-///
-/// It is recommended that before attempting to use cryptographic
-/// operations users call [`list_providers`](#method.list_providers)
-/// and [`list_provider_operations`](#method.list_provider_operations)
-/// in order to figure out if their desired use case and provider are
-/// available.
 #[derive(Debug)]
 pub struct BasicClient {
     pub(crate) op_client: OperationClient,
     pub(crate) auth_data: AuthenticationData,
-    pub(crate) implicit_provider: ProviderID,
+    pub(crate) implicit_provider: Option<ProviderID>,
 }
 
 /// Main client functionality.
 impl BasicClient {
-    /// Create a new Parsec client given the authentication data of the app and a provider ID.
+    /// Create a new Parsec client given the authentication data of the app.
     ///
-    /// The `implicit_provider` will be used for all non-core operations. Thus, until a
-    /// different provider ID is set using [`set_implicit_provider`](#method.set_implicit_provider),
-    /// all cryptographic operations will be executed in the context of this provider (if it is
-    /// available within the service).
-    ///
-    /// In order to get a list of supported providers, call the [`list_providers`](#method.list_providers)
-    /// method.
-    pub fn new(auth_data: AuthenticationData, implicit_provider: ProviderID) -> Self {
+    /// Before you can use this client for cryptographic operations, you first need to call
+    /// [`set_implicit_provider`](#method.set_implicit_provider). In order to get a list of
+    /// supported providers, call the [`list_providers`](#method.list_providers) method.
+    pub fn new(auth_data: AuthenticationData) -> Self {
         BasicClient {
             op_client: Default::default(),
             auth_data,
-            implicit_provider,
+            implicit_provider: None,
         }
     }
 
@@ -187,16 +187,16 @@ impl BasicClient {
 
     /// Set the provider that the client will be implicitly working with.
     pub fn set_implicit_provider(&mut self, provider: ProviderID) {
-        self.implicit_provider = provider;
+        self.implicit_provider = Some(provider);
     }
 
     /// Retrieve client's implicit provider.
-    pub fn implicit_provider(&self) -> ProviderID {
+    pub fn implicit_provider(&self) -> Option<ProviderID> {
         self.implicit_provider
     }
 
     /// **[Core Operation]** List the opcodes supported by the specified provider.
-    pub fn list_provider_operations(&self, provider: ProviderID) -> Result<HashSet<Opcode>> {
+    pub fn list_opcodes(&self, provider: ProviderID) -> Result<HashSet<Opcode>> {
         let res = self.op_client.process_operation(
             NativeOperation::ListOpcodes(ListOpcodes {
                 provider_id: provider,
@@ -271,10 +271,13 @@ impl BasicClient {
     /// If the implicit client provider is `ProviderID::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_generate_key.html#specific-response-status-codes).
     pub fn psa_generate_key(&self, key_name: String, key_attributes: KeyAttributes) -> Result<()> {
-        self.can_provide_crypto()?;
+        let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaGenerateKey {
             key_name,
@@ -283,7 +286,7 @@ impl BasicClient {
 
         let _ = self.op_client.process_operation(
             NativeOperation::PsaGenerateKey(op),
-            self.implicit_provider,
+            crypto_provider,
             &self.auth_data,
         )?;
 
@@ -301,16 +304,19 @@ impl BasicClient {
     /// If the implicit client provider is `ProviderID::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_destroy_key.html#specific-response-status-codes).
     pub fn psa_destroy_key(&self, key_name: String) -> Result<()> {
-        self.can_provide_crypto()?;
+        let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaDestroyKey { key_name };
 
         let _ = self.op_client.process_operation(
             NativeOperation::PsaDestroyKey(op),
-            self.implicit_provider,
+            crypto_provider,
             &self.auth_data,
         )?;
 
@@ -341,6 +347,9 @@ impl BasicClient {
     /// If the implicit client provider is `ProviderID::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_import_key.html#specific-response-status-codes).
     pub fn psa_import_key(
@@ -349,7 +358,7 @@ impl BasicClient {
         key_material: Vec<u8>,
         key_attributes: KeyAttributes,
     ) -> Result<()> {
-        self.can_provide_crypto()?;
+        let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaImportKey {
             key_name,
@@ -359,7 +368,7 @@ impl BasicClient {
 
         let _ = self.op_client.process_operation(
             NativeOperation::PsaImportKey(op),
-            self.implicit_provider,
+            crypto_provider,
             &self.auth_data,
         )?;
 
@@ -382,16 +391,19 @@ impl BasicClient {
     /// If the implicit client provider is `ProviderID::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_export_public_key.html#specific-response-status-codes).
     pub fn psa_export_public_key(&self, key_name: String) -> Result<Vec<u8>> {
-        self.can_provide_crypto()?;
+        let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaExportPublicKey { key_name };
 
         let res = self.op_client.process_operation(
             NativeOperation::PsaExportPublicKey(op),
-            self.implicit_provider,
+            crypto_provider,
             &self.auth_data,
         )?;
 
@@ -421,6 +433,9 @@ impl BasicClient {
     /// If the implicit client provider is `ProviderID::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_sign_hash.html#specific-response-status-codes).
     pub fn psa_sign_hash(
@@ -429,7 +444,7 @@ impl BasicClient {
         hash: Vec<u8>,
         sign_algorithm: AsymmetricSignature,
     ) -> Result<Vec<u8>> {
-        self.can_provide_crypto()?;
+        let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaSignHash {
             key_name,
@@ -439,7 +454,7 @@ impl BasicClient {
 
         let res = self.op_client.process_operation(
             NativeOperation::PsaSignHash(op),
-            self.implicit_provider,
+            crypto_provider,
             &self.auth_data,
         )?;
 
@@ -469,6 +484,9 @@ impl BasicClient {
     /// If the implicit client provider is `ProviderID::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_verify_hash.html#specific-response-status-codes).
     pub fn psa_verify_hash(
@@ -478,7 +496,7 @@ impl BasicClient {
         sign_algorithm: AsymmetricSignature,
         signature: Vec<u8>,
     ) -> Result<()> {
-        self.can_provide_crypto()?;
+        let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaVerifyHash {
             key_name,
@@ -489,17 +507,18 @@ impl BasicClient {
 
         let _ = self.op_client.process_operation(
             NativeOperation::PsaVerifyHash(op),
-            self.implicit_provider,
+            crypto_provider,
             &self.auth_data,
         )?;
 
         Ok(())
     }
 
-    fn can_provide_crypto(&self) -> Result<()> {
+    fn can_provide_crypto(&self) -> Result<ProviderID> {
         match self.implicit_provider {
-            ProviderID::Core => Err(Error::Client(ClientErrorKind::InvalidProvider)),
-            _ => Ok(()),
+            None => Err(Error::Client(ClientErrorKind::NoProvider)),
+            Some(ProviderID::Core) => Err(Error::Client(ClientErrorKind::InvalidProvider)),
+            Some(crypto_provider) => Ok(crypto_provider),
         }
     }
 }
