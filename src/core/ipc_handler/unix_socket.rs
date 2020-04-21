@@ -32,6 +32,10 @@ impl Connect for Handler {
 
         Ok(Box::from(stream))
     }
+
+    fn set_timeout(&mut self, timeout: Option<Duration>) {
+        self.timeout = timeout;
+    }
 }
 
 impl Handler {
