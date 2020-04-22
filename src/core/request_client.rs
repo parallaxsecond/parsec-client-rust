@@ -5,6 +5,7 @@ use super::ipc_handler::{unix_socket, Connect};
 use crate::error::{ClientErrorKind, Result};
 use derivative::Derivative;
 use parsec_interface::requests::{Request, Response};
+use std::time::Duration;
 
 const DEFAULT_MAX_BODY_SIZE: usize = usize::max_value();
 
@@ -64,5 +65,15 @@ impl crate::BasicClient {
     /// By default the [Unix domain socket client](../ipc_handler/unix_socket/struct.Client.html) is used.
     pub fn set_ipc_handler(&mut self, ipc_handler: Box<dyn Connect>) {
         self.op_client.request_client.ipc_handler = ipc_handler;
+    }
+
+    /// Set the timeout for operations on the IPC stream.
+    ///
+    /// The value defaults to 1 second.
+    pub fn set_timeout(&mut self, timeout: Option<Duration>) {
+        self.op_client
+            .request_client
+            .ipc_handler
+            .set_timeout(timeout);
     }
 }

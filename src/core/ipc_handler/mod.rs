@@ -3,6 +3,7 @@
 //! Types implementing an abstraction over IPC channels
 use crate::error::Result;
 use std::io::{Read, Write};
+use std::time::Duration;
 
 pub mod unix_socket;
 
@@ -18,4 +19,7 @@ impl<T: Read + Write> ReadWrite for T {}
 pub trait Connect {
     /// Connect to underlying IPC and return a readable and writeable stream
     fn connect(&self) -> Result<Box<dyn ReadWrite>>;
+
+    /// Set timeout for all produced streams.
+    fn set_timeout(&mut self, timeout: Option<Duration>);
 }

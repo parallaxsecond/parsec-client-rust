@@ -8,6 +8,7 @@ use crate::error::Result;
 use mockstream::{FailingMockStream, SyncMockStream};
 use parsec_interface::requests::ProviderID;
 use std::ops::{Deref, DerefMut};
+use std::time::Duration;
 
 mod core_tests;
 
@@ -19,6 +20,8 @@ impl Connect for MockIpc {
     fn connect(&self) -> Result<Box<dyn ReadWrite>> {
         Ok(Box::from(self.0.clone()))
     }
+
+    fn set_timeout(&mut self, _timeout: Option<Duration>) {}
 }
 
 struct FailingMockIpc(FailingMockStream);
@@ -27,6 +30,8 @@ impl Connect for FailingMockIpc {
     fn connect(&self) -> Result<Box<dyn ReadWrite>> {
         Ok(Box::from(self.0.clone()))
     }
+
+    fn set_timeout(&mut self, _timeout: Option<Duration>) {}
 }
 
 struct TestBasicClient {
