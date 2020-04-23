@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 use super::{FailingMockIpc, TestBasicClient, DEFAULT_APP_NAME};
 use crate::auth::AuthenticationData;
-use crate::core::ProviderID;
 use crate::error::{ClientErrorKind, Error};
 use crate::BasicClient;
 use mockstream::{FailingMockStream, MockStream};
@@ -13,6 +12,7 @@ use parsec_interface::operations::psa_key_attributes::*;
 use parsec_interface::operations::Convert;
 use parsec_interface::operations::{NativeOperation, NativeResult};
 use parsec_interface::operations_protobuf::ProtobufConverter;
+use parsec_interface::requests::ProviderID;
 use parsec_interface::requests::Response;
 use parsec_interface::requests::ResponseStatus;
 use parsec_interface::requests::{request::RequestHeader, Request};

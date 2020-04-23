@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Basic client for Parsec integration
 use super::operation_client::OperationClient;
-use super::{Opcode, ProviderID};
 use crate::auth::AuthenticationData;
 use crate::error::{ClientErrorKind, Error, Result};
 use parsec_interface::operations::list_opcodes::Operation as ListOpcodes;
@@ -17,6 +16,7 @@ use parsec_interface::operations::psa_key_attributes::KeyAttributes;
 use parsec_interface::operations::psa_sign_hash::Operation as PsaSignHash;
 use parsec_interface::operations::psa_verify_hash::Operation as PsaVerifyHash;
 use parsec_interface::operations::{NativeOperation, NativeResult};
+use parsec_interface::requests::{Opcode, ProviderID};
 use std::collections::HashSet;
 
 /// Core client for Parsec service
@@ -49,7 +49,7 @@ use std::collections::HashSet;
 ///```no_run
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
-///# use parsec_client::core::ProviderID;
+///# use parsec_client::core::interface::requests::ProviderID;
 ///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
 ///let res = client.ping();
 ///
@@ -71,7 +71,7 @@ use std::collections::HashSet;
 ///```no_run
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
-///# use parsec_client::core::ProviderID;
+///# use parsec_client::core::interface::requests::ProviderID;
 ///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
 ///use uuid::Uuid;
 ///
@@ -93,9 +93,9 @@ use std::collections::HashSet;
 ///```no_run
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
-///# use parsec_client::core::ProviderID;
+///# use parsec_client::core::interface::requests::ProviderID;
 ///# let mut client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
-///use parsec_client::core::Opcode;
+///use parsec_client::core::interface::requests::Opcode;
 ///
 ///let desired_provider = ProviderID::Pkcs11;
 ///let provider_opcodes = client
@@ -114,10 +114,10 @@ use std::collections::HashSet;
 ///```no_run
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
-///# use parsec_client::core::ProviderID;
+///# use parsec_client::core::interface::requests::ProviderID;
 ///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
-///use parsec_client::core::psa_algorithm::{Algorithm, AsymmetricSignature, Hash};
-///use parsec_client::core::psa_key_attributes::{KeyAttributes, KeyPolicy, KeyType, UsageFlags};
+///use parsec_client::core::interface::operations::psa_algorithm::{Algorithm, AsymmetricSignature, Hash};
+///use parsec_client::core::interface::operations::psa_key_attributes::{KeyAttributes, KeyPolicy, KeyType, UsageFlags};
 ///
 ///let key_name = String::from("rusty key 🔑");
 ///// This algorithm identifier will be used within the key policy (i.e. what
