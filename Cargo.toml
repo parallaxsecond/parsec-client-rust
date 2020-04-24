@@ -1,6 +1,6 @@
 [package]
 name = "parsec-client"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Ionut Mihalcea <ionut.mihalcea@arm.com>",
            "Hugues de Valon <hugues.devalon@arm.com>"]
 description = "Parsec Client library for the Rust ecosystem"
