@@ -25,7 +25,7 @@ pub struct RequestClient {
     ///
     /// Defaults to using Unix domain sockets
     #[derivative(Debug = "ignore")]
-    pub ipc_handler: Box<dyn Connect>,
+    pub ipc_handler: Box<dyn Connect + Send + Sync>,
 }
 
 impl RequestClient {
@@ -63,7 +63,7 @@ impl crate::BasicClient {
     /// Set the IPC handler used for communication with the service.
     ///
     /// By default the [Unix domain socket client](../ipc_handler/unix_socket/struct.Client.html) is used.
-    pub fn set_ipc_handler(&mut self, ipc_handler: Box<dyn Connect>) {
+    pub fn set_ipc_handler(&mut self, ipc_handler: Box<dyn Connect + Send + Sync>) {
         self.op_client.request_client.ipc_handler = ipc_handler;
     }
 

@@ -10,6 +10,7 @@ readme = "README.md"
 keywords = ["parsec"]
 categories = ["development-tools"]
 edition = "2018"
+documentation = "https://docs.rs/crate/parsec-client"
 
 [dependencies]
 parsec-interface = "0.14.0"
