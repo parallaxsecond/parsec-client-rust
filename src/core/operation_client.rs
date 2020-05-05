@@ -23,12 +23,12 @@ pub struct OperationClient {
     ///
     /// Defaults to a Protobuf converter
     #[derivative(Debug = "ignore")]
-    pub content_converter: Box<dyn Convert>,
+    pub content_converter: Box<dyn Convert + Send + Sync>,
     /// Converter that manages response body conversions
     ///
     /// Defaults to a Protobuf converter
     #[derivative(Debug = "ignore")]
-    pub accept_converter: Box<dyn Convert>,
+    pub accept_converter: Box<dyn Convert + Send + Sync>,
     /// Client for request and response objects
     pub request_client: RequestClient,
 }
@@ -125,14 +125,20 @@ impl crate::BasicClient {
     /// Set the converter used for request bodies handled by this client.
     ///
     /// By default Protobuf will be used for this.
-    pub fn set_request_body_converter(&mut self, content_converter: Box<dyn Convert>) {
+    pub fn set_request_body_converter(
+        &mut self,
+        content_converter: Box<dyn Convert + Send + Sync>,
+    ) {
         self.op_client.content_converter = content_converter;
     }
 
     /// Set the converter used for response bodies handled by this client.
     ///
     /// By default Protobuf will be used for this.
-    pub fn set_response_body_converter(&mut self, accept_converter: Box<dyn Convert>) {
+    pub fn set_response_body_converter(
+        &mut self,
+        accept_converter: Box<dyn Convert + Send + Sync>,
+    ) {
         self.op_client.accept_converter = accept_converter;
     }
 }
