@@ -382,10 +382,6 @@ impl BasicClient {
     /// Several crates (e.g. [`picky-asn1`](https://crates.io/crates/picky-asn1))
     /// can greatly help in dealing with binary encodings.
     ///
-    /// In order to export a public key, the export flag found in the
-    /// [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.KeyPolicy.html)
-    /// **must** be `true`.
-    ///
     /// # Errors
     ///
     /// If the implicit client provider is `ProviderID::Core`, a client error
