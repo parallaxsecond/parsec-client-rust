@@ -146,11 +146,12 @@ fn psa_generate_key_test() {
         NativeResult::PsaGenerateKey(operations::psa_generate_key::Result {}),
     ));
     let key_name = String::from("key-name");
-    let key_attrs = KeyAttributes {
-        key_type: KeyType::Aes,
-        key_bits: 192,
-        key_policy: KeyPolicy {
-            key_usage_flags: UsageFlags {
+    let key_attrs = Attributes {
+        lifetime: Lifetime::Persistent,
+        key_type: Type::Aes,
+        bits: 192,
+        policy: Policy {
+            usage_flags: UsageFlags {
                 export: true,
                 copy: true,
                 cache: true,
@@ -162,7 +163,7 @@ fn psa_generate_key_test() {
                 verify_hash: false,
                 derive: false,
             },
-            key_algorithm: Algorithm::Cipher(Cipher::Ctr),
+            permitted_algorithms: Algorithm::Cipher(Cipher::Ctr),
         },
     };
 
@@ -213,11 +214,12 @@ fn psa_import_key_test() {
         operations::psa_import_key::Result {},
     )));
     let key_name = String::from("key-name");
-    let key_attrs = KeyAttributes {
-        key_type: KeyType::Aes,
-        key_bits: 192,
-        key_policy: KeyPolicy {
-            key_usage_flags: UsageFlags {
+    let key_attrs = Attributes {
+        lifetime: Lifetime::Persistent,
+        key_type: Type::Aes,
+        bits: 192,
+        policy: Policy {
+            usage_flags: UsageFlags {
                 export: true,
                 copy: true,
                 cache: true,
@@ -229,7 +231,7 @@ fn psa_import_key_test() {
                 verify_hash: false,
                 derive: false,
             },
-            key_algorithm: Algorithm::Cipher(Cipher::Ctr),
+            permitted_algorithms: Algorithm::Cipher(Cipher::Ctr),
         },
     };
     let key_data = vec![0xff_u8; 128];
@@ -285,7 +287,7 @@ fn psa_sign_hash_test() {
     let hash = vec![0x77_u8; 32];
     let key_name = String::from("key_name");
     let sign_algorithm = AsymmetricSignature::Ecdsa {
-        hash_alg: Hash::Sha256,
+        hash_alg: Hash::Sha256.into(),
     };
     let signature = vec![0x33_u8; 128];
     client.set_mock_read(&get_response_bytes_from_result(NativeResult::PsaSignHash(
@@ -319,7 +321,7 @@ fn verify_hash_test() {
     let hash = vec![0x77_u8; 32];
     let key_name = String::from("key_name");
     let sign_algorithm = AsymmetricSignature::Ecdsa {
-        hash_alg: Hash::Sha256,
+        hash_alg: Hash::Sha256.into(),
     };
     let signature = vec![0x33_u8; 128];
     client.set_mock_read(&get_response_bytes_from_result(

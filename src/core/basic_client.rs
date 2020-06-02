@@ -12,7 +12,7 @@ use parsec_interface::operations::psa_destroy_key::Operation as PsaDestroyKey;
 use parsec_interface::operations::psa_export_public_key::Operation as PsaExportPublicKey;
 use parsec_interface::operations::psa_generate_key::Operation as PsaGenerateKey;
 use parsec_interface::operations::psa_import_key::Operation as PsaImportKey;
-use parsec_interface::operations::psa_key_attributes::KeyAttributes;
+use parsec_interface::operations::psa_key_attributes::Attributes;
 use parsec_interface::operations::psa_sign_hash::Operation as PsaSignHash;
 use parsec_interface::operations::psa_verify_hash::Operation as PsaVerifyHash;
 use parsec_interface::operations::{NativeOperation, NativeResult};
@@ -117,23 +117,24 @@ use std::collections::HashSet;
 ///# use parsec_client::core::interface::requests::ProviderID;
 ///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
 ///use parsec_client::core::interface::operations::psa_algorithm::{Algorithm, AsymmetricSignature, Hash};
-///use parsec_client::core::interface::operations::psa_key_attributes::{KeyAttributes, KeyPolicy, KeyType, UsageFlags};
+///use parsec_client::core::interface::operations::psa_key_attributes::{Attributes, Lifetime, Policy, Type, UsageFlags};
 ///
 ///let key_name = String::from("rusty key 🔑");
 ///// This algorithm identifier will be used within the key policy (i.e. what
 ///// algorithms are usable with the key) and for indicating the desired
 ///// algorithm for each operation involving the key.
 ///let asym_sign_algo = AsymmetricSignature::RsaPkcs1v15Sign {
-///    hash_alg: Hash::Sha256,
+///    hash_alg: Hash::Sha256.into(),
 ///};
 ///
 ///// The key attributes define and limit the usage of the key material stored
 ///// by the underlying cryptographic provider.
-///let key_attrs = KeyAttributes {
-///    key_type: KeyType::RsaKeyPair,
-///    key_bits: 2048,
-///    key_policy: KeyPolicy {
-///        key_usage_flags: UsageFlags {
+///let key_attrs = Attributes {
+///    lifetime: Lifetime::Persistent,
+///    key_type: Type::RsaKeyPair,
+///    bits: 2048,
+///    policy: Policy {
+///        usage_flags: UsageFlags {
 ///            export: true,
 ///            copy: true,
 ///            cache: true,
@@ -145,7 +146,7 @@ use std::collections::HashSet;
 ///            verify_hash: false,
 ///            derive: false,
 ///        },
-///        key_algorithm: asym_sign_algo.into(),
+///        permitted_algorithms: asym_sign_algo.into(),
 ///    },
 ///};
 ///
@@ -276,7 +277,7 @@ impl BasicClient {
     ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_generate_key.html#specific-response-status-codes).
-    pub fn psa_generate_key(&self, key_name: String, key_attributes: KeyAttributes) -> Result<()> {
+    pub fn psa_generate_key(&self, key_name: String, key_attributes: Attributes) -> Result<()> {
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaGenerateKey {
@@ -356,7 +357,7 @@ impl BasicClient {
         &self,
         key_name: String,
         key_material: Vec<u8>,
-        key_attributes: KeyAttributes,
+        key_attributes: Attributes,
     ) -> Result<()> {
         let crypto_provider = self.can_provide_crypto()?;
 
@@ -415,7 +416,7 @@ impl BasicClient {
     /// **[Cryptographic Operation]** Create an asymmetric signature on a pre-computed message digest.
     ///
     /// The key intended for signing **must** have its `sign_hash` flag set
-    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.KeyPolicy.html).
+    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
     ///
     /// The signature will be created with the algorithm defined in
     /// `sign_algorithm`, but only after checking that the key policy
@@ -466,7 +467,7 @@ impl BasicClient {
     /// **[Cryptographic Operation]** Verify an existing asymmetric signature over a pre-computed message digest.
     ///
     /// The key intended for signing **must** have its `verify_hash` flag set
-    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.KeyPolicy.html).
+    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
     ///
     /// The signature will be verifyied with the algorithm defined in
     /// `sign_algorithm`, but only after checking that the key policy
