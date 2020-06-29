@@ -7,6 +7,7 @@ use crate::auth::AuthenticationData;
 use crate::error::Result;
 use mockstream::{FailingMockStream, SyncMockStream};
 use parsec_interface::requests::ProviderID;
+use parsec_interface::secrecy::Secret;
 use std::ops::{Deref, DerefMut};
 use std::time::Duration;
 
@@ -66,8 +67,8 @@ impl DerefMut for TestBasicClient {
 impl Default for TestBasicClient {
     fn default() -> Self {
         let mut client = TestBasicClient {
-            core_client: BasicClient::new(AuthenticationData::AppIdentity(String::from(
-                DEFAULT_APP_NAME,
+            core_client: BasicClient::new(AuthenticationData::AppIdentity(Secret::new(
+                String::from(DEFAULT_APP_NAME),
             ))),
             mock_stream: SyncMockStream::new(),
         };

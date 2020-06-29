@@ -17,6 +17,7 @@ use parsec_interface::requests::Response;
 use parsec_interface::requests::ResponseStatus;
 use parsec_interface::requests::{request::RequestHeader, Request};
 use parsec_interface::requests::{AuthType, BodyType, Opcode};
+use parsec_interface::secrecy::{ExposeSecret, Secret};
 use std::collections::HashSet;
 use std::io::ErrorKind;
 
@@ -118,7 +119,9 @@ fn list_opcodes_test() {
 
 #[test]
 fn no_crypto_provider_test() {
-    let client = BasicClient::new(AuthenticationData::AppIdentity(String::from("oops")));
+    let client = BasicClient::new(AuthenticationData::AppIdentity(Secret::new(String::from(
+        "oops",
+    ))));
 
     let res = client
         .psa_destroy_key(String::from("random key"))
@@ -129,7 +132,9 @@ fn no_crypto_provider_test() {
 
 #[test]
 fn core_provider_for_crypto_test() {
-    let mut client = BasicClient::new(AuthenticationData::AppIdentity(String::from("oops")));
+    let mut client = BasicClient::new(AuthenticationData::AppIdentity(Secret::new(String::from(
+        "oops",
+    ))));
 
     client.set_implicit_provider(ProviderID::Core);
     let res = client
@@ -168,7 +173,7 @@ fn psa_generate_key_test() {
     };
 
     client
-        .psa_generate_key(key_name.clone(), key_attrs.clone())
+        .psa_generate_key(key_name.clone(), key_attrs)
         .expect("failed to generate key");
 
     // Check request:
@@ -236,7 +241,7 @@ fn psa_import_key_test() {
     };
     let key_data = vec![0xff_u8; 128];
     client
-        .psa_import_key(key_name.clone(), key_data.clone(), key_attrs.clone())
+        .psa_import_key(key_name.clone(), &key_data, key_attrs)
         .unwrap();
 
     // Check request:
@@ -244,7 +249,7 @@ fn psa_import_key_test() {
     if let NativeOperation::PsaImportKey(op) = op {
         assert_eq!(op.attributes, key_attrs);
         assert_eq!(op.key_name, key_name);
-        assert_eq!(op.data, key_data);
+        assert_eq!(op.data.expose_secret(), &key_data);
     } else {
         panic!("Got wrong operation type: {:?}", op);
     }
@@ -259,7 +264,7 @@ fn psa_export_public_key_test() {
     let key_data = vec![0xa5; 128];
     client.set_mock_read(&get_response_bytes_from_result(
         NativeResult::PsaExportPublicKey(operations::psa_export_public_key::Result {
-            data: key_data.clone(),
+            data: key_data.clone().into(),
         }),
     ));
 
@@ -292,14 +297,14 @@ fn psa_sign_hash_test() {
     let signature = vec![0x33_u8; 128];
     client.set_mock_read(&get_response_bytes_from_result(NativeResult::PsaSignHash(
         operations::psa_sign_hash::Result {
-            signature: signature.clone(),
+            signature: signature.clone().into(),
         },
     )));
 
     // Check response:
     assert_eq!(
         client
-            .psa_sign_hash(key_name.clone(), hash.clone(), sign_algorithm.clone())
+            .psa_sign_hash(key_name.clone(), &hash, sign_algorithm)
             .expect("Failed to sign hash"),
         signature
     );
@@ -308,7 +313,7 @@ fn psa_sign_hash_test() {
     let op = get_operation_from_req_bytes(client.get_mock_write());
     if let NativeOperation::PsaSignHash(op) = op {
         assert_eq!(op.key_name, key_name);
-        assert_eq!(op.hash, hash);
+        assert_eq!(op.hash.to_vec(), hash);
         assert_eq!(op.alg, sign_algorithm);
     } else {
         panic!("Got wrong operation type: {:?}", op);
@@ -329,21 +334,16 @@ fn verify_hash_test() {
     ));
 
     client
-        .psa_verify_hash(
-            key_name.clone(),
-            hash.clone(),
-            sign_algorithm.clone(),
-            signature.clone(),
-        )
+        .psa_verify_hash(key_name.clone(), &hash, sign_algorithm, &signature)
         .expect("Failed to sign hash");
 
     // Check request:
     let op = get_operation_from_req_bytes(client.get_mock_write());
     if let NativeOperation::PsaVerifyHash(op) = op {
         assert_eq!(op.key_name, key_name);
-        assert_eq!(op.hash, hash);
+        assert_eq!(op.hash.to_vec(), hash);
         assert_eq!(op.alg, sign_algorithm);
-        assert_eq!(op.signature, signature);
+        assert_eq!(op.signature.to_vec(), signature);
     } else {
         panic!("Got wrong operation type: {:?}", op);
     }
@@ -423,7 +423,7 @@ fn auth_value_test() {
 
     let req = get_req_from_bytes(client.get_mock_write());
     assert_eq!(
-        String::from_utf8(req.auth.bytes().to_owned()).unwrap(),
+        String::from_utf8(req.auth.buffer.expose_secret().to_owned()).unwrap(),
         String::from(DEFAULT_APP_NAME)
     );
 }

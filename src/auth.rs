@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Client app authentication data
 use parsec_interface::requests::{request::RequestAuth, AuthType};
+use parsec_interface::secrecy::{ExposeSecret, Secret};
 
 /// Authentication data used in Parsec requests
 #[derive(Clone, Debug)]
@@ -9,7 +10,11 @@ pub enum AuthenticationData {
     /// Used in cases where no authentication is desired or required
     None,
     /// Data used for direct, identity-based authentication
-    AppIdentity(String),
+    ///
+    /// The app name is wrapped in a [`Secret`](https://docs.rs/secrecy/*/secrecy/struct.Secret.html).
+    /// The `Secret` struct can be imported from
+    /// `parsec_client::core::secrecy::Secret`.
+    AppIdentity(Secret<String>),
 }
 
 impl AuthenticationData {
@@ -25,9 +30,9 @@ impl AuthenticationData {
 impl From<&AuthenticationData> for RequestAuth {
     fn from(data: &AuthenticationData) -> Self {
         match data {
-            AuthenticationData::None => Default::default(),
+            AuthenticationData::None => RequestAuth::new(Vec::new()),
             AuthenticationData::AppIdentity(name) => {
-                RequestAuth::from_bytes(name.bytes().collect())
+                RequestAuth::new(name.expose_secret().bytes().collect())
             }
         }
     }
