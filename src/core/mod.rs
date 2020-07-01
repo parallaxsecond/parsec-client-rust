@@ -12,4 +12,7 @@ pub mod operation_client;
 pub mod request_client;
 mod testing;
 
+/// Resurfacing of the Secrecy library used by the client.
+pub use interface::secrecy;
+/// Resurfacing of the Parsec interface library used by the client.
 pub use parsec_interface as interface;

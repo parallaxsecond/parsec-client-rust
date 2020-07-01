@@ -17,7 +17,9 @@ use parsec_interface::operations::psa_sign_hash::Operation as PsaSignHash;
 use parsec_interface::operations::psa_verify_hash::Operation as PsaVerifyHash;
 use parsec_interface::operations::{NativeOperation, NativeResult};
 use parsec_interface::requests::{Opcode, ProviderID};
+use parsec_interface::secrecy::Secret;
 use std::collections::HashSet;
+use zeroize::Zeroizing;
 
 /// Core client for Parsec service
 ///
@@ -37,9 +39,10 @@ use std::collections::HashSet;
 ///```no_run
 ///use parsec_client::auth::AuthenticationData;
 ///use parsec_client::BasicClient;
+///use parsec_client::core::secrecy::Secret;
 ///
 ///let app_name = String::from("app-name");
-///let app_auth_data = AuthenticationData::AppIdentity(app_name);
+///let app_auth_data = AuthenticationData::AppIdentity(Secret::new(app_name));
 ///let client: BasicClient = BasicClient::new(app_auth_data);
 ///```
 ///
@@ -49,8 +52,9 @@ use std::collections::HashSet;
 ///```no_run
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
+///# use parsec_client::core::secrecy::Secret;
 ///# use parsec_client::core::interface::requests::ProviderID;
-///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
+///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(Secret::new(String::from("app-name"))));
 ///let res = client.ping();
 ///
 ///if let Ok((wire_prot_v_maj, wire_prot_v_min)) = res {
@@ -71,8 +75,9 @@ use std::collections::HashSet;
 ///```no_run
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
+///# use parsec_client::core::secrecy::Secret;
 ///# use parsec_client::core::interface::requests::ProviderID;
-///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
+///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(Secret::new(String::from("app-name"))));
 ///use uuid::Uuid;
 ///
 ///// Identify provider by its UUID (in this case, the PKCS11 provider)
@@ -94,7 +99,8 @@ use std::collections::HashSet;
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
 ///# use parsec_client::core::interface::requests::ProviderID;
-///# let mut client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
+///# use parsec_client::core::secrecy::Secret;
+///# let mut client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(Secret::new(String::from("app-name"))));
 ///use parsec_client::core::interface::requests::Opcode;
 ///
 ///let desired_provider = ProviderID::Pkcs11;
@@ -114,8 +120,9 @@ use std::collections::HashSet;
 ///```no_run
 ///# use parsec_client::auth::AuthenticationData;
 ///# use parsec_client::BasicClient;
+///# use parsec_client::core::secrecy::Secret;
 ///# use parsec_client::core::interface::requests::ProviderID;
-///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(String::from("app-name")));
+///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(Secret::new(String::from("app-name"))));
 ///use parsec_client::core::interface::operations::psa_algorithm::{Algorithm, AsymmetricSignature, Hash};
 ///use parsec_client::core::interface::operations::psa_key_attributes::{Attributes, Lifetime, Policy, Type, UsageFlags};
 ///
@@ -151,7 +158,7 @@ use std::collections::HashSet;
 ///};
 ///
 ///client
-///    .psa_generate_key(key_name, key_attrs)
+///    .psa_generate_key(key_name.clone(), key_attrs)
 ///    .expect("Failed to create key!");
 ///```
 #[derive(Debug)]
@@ -356,9 +363,10 @@ impl BasicClient {
     pub fn psa_import_key(
         &self,
         key_name: String,
-        key_material: Vec<u8>,
+        key_material: &[u8],
         key_attributes: Attributes,
     ) -> Result<()> {
+        let key_material = Secret::new(key_material.to_vec());
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaImportKey {
@@ -405,7 +413,7 @@ impl BasicClient {
         )?;
 
         if let NativeResult::PsaExportPublicKey(res) = res {
-            Ok(res.data)
+            Ok(res.data.to_vec())
         } else {
             // Should really not be reached given the checks we do, but it's not impossible if some
             // changes happen in the interface
@@ -438,9 +446,10 @@ impl BasicClient {
     pub fn psa_sign_hash(
         &self,
         key_name: String,
-        hash: Vec<u8>,
+        hash: &[u8],
         sign_algorithm: AsymmetricSignature,
     ) -> Result<Vec<u8>> {
+        let hash = Zeroizing::new(hash.to_vec());
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaSignHash {
@@ -456,7 +465,7 @@ impl BasicClient {
         )?;
 
         if let NativeResult::PsaSignHash(res) = res {
-            Ok(res.signature)
+            Ok(res.signature.to_vec())
         } else {
             // Should really not be reached given the checks we do, but it's not impossible if some
             // changes happen in the interface
@@ -489,10 +498,12 @@ impl BasicClient {
     pub fn psa_verify_hash(
         &self,
         key_name: String,
-        hash: Vec<u8>,
+        hash: &[u8],
         sign_algorithm: AsymmetricSignature,
-        signature: Vec<u8>,
+        signature: &[u8],
     ) -> Result<()> {
+        let hash = Zeroizing::new(hash.to_vec());
+        let signature = Zeroizing::new(signature.to_vec());
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaVerifyHash {
