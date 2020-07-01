@@ -3,11 +3,16 @@
 //! Handler for Unix domain sockets
 use super::{Connect, ReadWrite};
 use crate::error::{ClientErrorKind, Result};
+use log::error;
+use std::ffi::OsStr;
+use std::fs;
+use std::io::{Error, ErrorKind};
+use std::os::unix::fs::MetadataExt;
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 use std::time::Duration;
 
-const DEFAULT_SOCKET_PATH: &str = "/tmp/security-daemon-socket";
+const DEFAULT_SOCKET_PATH: &str = "/tmp/parsec/parsec.sock";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
 
 /// IPC handler for Unix domain sockets
@@ -21,6 +26,9 @@ pub struct Handler {
 
 impl Connect for Handler {
     fn connect(&self) -> Result<Box<dyn ReadWrite>> {
+        #[cfg(not(no_fs_permission_check))]
+        self.secure_parsec_socket_folder()?;
+
         let stream = UnixStream::connect(self.path.clone()).map_err(ClientErrorKind::Ipc)?;
 
         stream
@@ -42,6 +50,74 @@ impl Handler {
     /// Create new client using given socket path and timeout duration
     pub fn new(path: PathBuf, timeout: Option<Duration>) -> Self {
         Handler { path, timeout }
+    }
+
+    /// Checks if the socket is inside a folder with correct owners and permissions to make sure it
+    /// is from the Parsec service.
+    #[cfg(not(no_fs_permission_check))]
+    fn secure_parsec_socket_folder(&self) -> Result<()> {
+        let mut socket_dir = self.path.clone();
+        if !socket_dir.pop() {
+            return Err(ClientErrorKind::Ipc(Error::new(
+                ErrorKind::Other,
+                "Socket permission checks failed",
+            ))
+            .into());
+        }
+        let meta = fs::metadata(socket_dir).map_err(ClientErrorKind::Ipc)?;
+
+        match users::get_user_by_uid(meta.uid()) {
+            Some(user) => {
+                if user.name() != OsStr::new("parsec") {
+                    error!("The socket directory must be owned by the parsec user.");
+                    return Err(ClientErrorKind::Ipc(Error::new(
+                        ErrorKind::Other,
+                        "Socket permission checks failed",
+                    ))
+                    .into());
+                }
+            }
+            None => {
+                error!("Can not find socket directory user owner.");
+                return Err(ClientErrorKind::Ipc(Error::new(
+                    ErrorKind::Other,
+                    "Socket permission checks failed",
+                ))
+                .into());
+            }
+        }
+
+        match users::get_group_by_gid(meta.gid()) {
+            Some(group) => {
+                if group.name() != OsStr::new("parsec-clients") {
+                    error!("The socket directory must be owned by the parsec-clients group.");
+                    return Err(ClientErrorKind::Ipc(Error::new(
+                        ErrorKind::Other,
+                        "Socket permission checks failed",
+                    ))
+                    .into());
+                }
+            }
+            None => {
+                error!("Can not find socket directory group owner.");
+                return Err(ClientErrorKind::Ipc(Error::new(
+                    ErrorKind::Other,
+                    "Socket permission checks failed",
+                ))
+                .into());
+            }
+        }
+
+        if (meta.mode() & 0o777) != 0o750 {
+            error!("The permission bits of the folder containing the Parsec socket must be 750.");
+            return Err(ClientErrorKind::Ipc(Error::new(
+                ErrorKind::Other,
+                "Socket permission checks failed",
+            ))
+            .into());
+        }
+
+        Ok(())
     }
 }
 
