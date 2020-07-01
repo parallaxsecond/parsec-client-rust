@@ -3,14 +3,20 @@
 //! Handler for Unix domain sockets
 use super::{Connect, ReadWrite};
 use crate::error::{ClientErrorKind, Result};
-use log::error;
-use std::ffi::OsStr;
-use std::fs;
-use std::io::{Error, ErrorKind};
-use std::os::unix::fs::MetadataExt;
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 use std::time::Duration;
+
+#[cfg(not(feature = "no-fs-permission-check"))]
+use log::error;
+#[cfg(not(feature = "no-fs-permission-check"))]
+use std::ffi::OsStr;
+#[cfg(not(feature = "no-fs-permission-check"))]
+use std::fs;
+#[cfg(not(feature = "no-fs-permission-check"))]
+use std::io::{Error, ErrorKind};
+#[cfg(not(feature = "no-fs-permission-check"))]
+use std::os::unix::fs::MetadataExt;
 
 const DEFAULT_SOCKET_PATH: &str = "/tmp/parsec/parsec.sock";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
@@ -26,7 +32,7 @@ pub struct Handler {
 
 impl Connect for Handler {
     fn connect(&self) -> Result<Box<dyn ReadWrite>> {
-        #[cfg(not(no_fs_permission_check))]
+        #[cfg(not(feature = "no-fs-permission-check"))]
         self.secure_parsec_socket_folder()?;
 
         let stream = UnixStream::connect(self.path.clone()).map_err(ClientErrorKind::Ipc)?;
@@ -54,7 +60,7 @@ impl Handler {
 
     /// Checks if the socket is inside a folder with correct owners and permissions to make sure it
     /// is from the Parsec service.
-    #[cfg(not(no_fs_permission_check))]
+    #[cfg(not(feature = "no-fs-permission-check"))]
     fn secure_parsec_socket_folder(&self) -> Result<()> {
         let mut socket_dir = self.path.clone();
         if !socket_dir.pop() {
