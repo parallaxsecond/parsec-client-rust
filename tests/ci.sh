@@ -12,6 +12,7 @@ set -euf -o pipefail
 # Build client #
 ################
 RUST_BACKTRACE=1 cargo build
+RUST_BACKTRACE=1 cargo build --features testing
 
 #################
 # Static checks #
