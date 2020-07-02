@@ -353,6 +353,72 @@ fn verify_hash_test() {
 }
 
 #[test]
+fn asymmetric_encrypt_test() {
+    let mut client: TestBasicClient = Default::default();
+    let plaintext = vec![0x77_u8; 32];
+    let key_name = String::from("key_name");
+    let encrypt_algorithm = AsymmetricEncryption::RsaPkcs1v15Crypt;
+    let ciphertext = vec![0x33_u8; 128];
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::PsaAsymmetricEncrypt(operations::psa_asymmetric_encrypt::Result {
+            ciphertext: ciphertext.clone().into(),
+        }),
+    ));
+
+    // Check response:
+    assert_eq!(
+        client
+            .psa_asymmetric_encrypt(key_name.clone(), encrypt_algorithm, &plaintext, None)
+            .expect("Failed to encrypt message"),
+        ciphertext
+    );
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::PsaAsymmetricEncrypt(op) = op {
+        assert_eq!(op.key_name, key_name);
+        assert_eq!(op.alg, encrypt_algorithm);
+        assert_eq!(*op.plaintext, plaintext);
+        assert_eq!(op.salt, None);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+}
+
+#[test]
+fn asymmetric_decrypt_test() {
+    let mut client: TestBasicClient = Default::default();
+    let plaintext = vec![0x77_u8; 32];
+    let key_name = String::from("key_name");
+    let encrypt_algorithm = AsymmetricEncryption::RsaPkcs1v15Crypt;
+    let ciphertext = vec![0x33_u8; 128];
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::PsaAsymmetricDecrypt(operations::psa_asymmetric_decrypt::Result {
+            plaintext: plaintext.clone().into(),
+        }),
+    ));
+
+    // Check response
+    assert_eq!(
+        client
+            .psa_asymmetric_decrypt(key_name.clone(), encrypt_algorithm, &ciphertext, None)
+            .expect("Failed to encrypt message"),
+        plaintext
+    );
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::PsaAsymmetricDecrypt(op) = op {
+        assert_eq!(op.key_name, key_name);
+        assert_eq!(op.alg, encrypt_algorithm);
+        assert_eq!(*op.ciphertext, ciphertext);
+        assert_eq!(op.salt, None);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+}
+
+#[test]
 fn different_response_type_test() {
     let mut client: TestBasicClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(

@@ -7,7 +7,9 @@ use crate::error::{ClientErrorKind, Error, Result};
 use parsec_interface::operations::list_opcodes::Operation as ListOpcodes;
 use parsec_interface::operations::list_providers::{Operation as ListProviders, ProviderInfo};
 use parsec_interface::operations::ping::Operation as Ping;
-use parsec_interface::operations::psa_algorithm::AsymmetricSignature;
+use parsec_interface::operations::psa_algorithm::{AsymmetricEncryption, AsymmetricSignature};
+use parsec_interface::operations::psa_asymmetric_decrypt::Operation as PsaAsymDecrypt;
+use parsec_interface::operations::psa_asymmetric_encrypt::Operation as PsaAsymEncrypt;
 use parsec_interface::operations::psa_destroy_key::Operation as PsaDestroyKey;
 use parsec_interface::operations::psa_export_public_key::Operation as PsaExportPublicKey;
 use parsec_interface::operations::psa_generate_key::Operation as PsaGenerateKey;
@@ -229,7 +231,6 @@ impl BasicClient {
             ProviderID::Core,
             &self.auth_data,
         )?;
-
         if let NativeResult::ListProviders(res) = res {
             Ok(res.providers)
         } else {
@@ -520,6 +521,117 @@ impl BasicClient {
         )?;
 
         Ok(())
+    }
+
+    /// **[Cryptographic Operation]** Encrypt a short message.
+    ///
+    /// The key intended for encrypting **must** have its `encrypt` flag set
+    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
+    ///
+    /// The encryption will be performed with the algorithm defined in `alg`,
+    /// but only after checking that the key policy and type conform with it.
+    ///
+    /// `salt` can be provided if supported by the algorithm. If the algorithm does not support salt, pass
+    //    an empty vector. If the algorithm supports optional salt, pass an empty vector to indicate no
+    //    salt. For RSA PKCS#1 v1.5 encryption, no salt is supported.
+    ///
+    /// # Errors
+    ///
+    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// of `InvalidProvider` type is returned.
+    ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_asymmetric_encrypt.html#specific-response-status-codes).
+    pub fn psa_asymmetric_encrypt(
+        &self,
+        key_name: String,
+        encrypt_alg: AsymmetricEncryption,
+        plaintext: &[u8],
+        salt: Option<&[u8]>,
+    ) -> Result<Vec<u8>> {
+        let salt = salt.map(|salt_ref| salt_ref.to_vec().into());
+        let crypto_provider = self.can_provide_crypto()?;
+
+        let op = PsaAsymEncrypt {
+            key_name,
+            alg: encrypt_alg,
+            plaintext: plaintext.to_vec().into(),
+            salt,
+        };
+
+        let encrypt_res = self.op_client.process_operation(
+            NativeOperation::PsaAsymmetricEncrypt(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+
+        if let NativeResult::PsaAsymmetricEncrypt(res) = encrypt_res {
+            Ok(res.ciphertext.to_vec())
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Cryptographic Operation]** Decrypt a short message.
+    ///
+    /// The key intended for decrypting **must** have its `decrypt` flag set
+    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
+    ///
+    /// The decryption will be performed with the algorithm defined in `alg`,
+    /// but only after checking that the key policy and type conform with it.
+    ///
+    /// `salt` can be provided if supported by the algorithm. If the algorithm does not support salt, pass
+    //    an empty vector. If the algorithm supports optional salt, pass an empty vector to indicate no
+    //    salt. For RSA PKCS#1 v1.5 encryption, no salt is supported.
+    ///
+    /// # Errors
+    ///
+    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// of `InvalidProvider` type is returned.
+    ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_asymmetric_decrypt.html#specific-response-status-codes).
+    pub fn psa_asymmetric_decrypt(
+        &self,
+        key_name: String,
+        encrypt_alg: AsymmetricEncryption,
+        ciphertext: &[u8],
+        salt: Option<&[u8]>,
+    ) -> Result<Vec<u8>> {
+        let salt = match salt {
+            Some(salt) => Some(Zeroizing::new(salt.to_vec())),
+            None => None,
+        };
+        let crypto_provider = self.can_provide_crypto()?;
+
+        let op = PsaAsymDecrypt {
+            key_name,
+            alg: encrypt_alg,
+            ciphertext: Zeroizing::new(ciphertext.to_vec()),
+            salt,
+        };
+
+        let decrypt_res = self.op_client.process_operation(
+            NativeOperation::PsaAsymmetricDecrypt(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+
+        if let NativeResult::PsaAsymmetricDecrypt(res) = decrypt_res {
+            Ok(res.plaintext.to_vec())
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
     }
 
     fn can_provide_crypto(&self) -> Result<ProviderID> {
