@@ -287,6 +287,34 @@ fn psa_export_public_key_test() {
 }
 
 #[test]
+fn psa_export_key_test() {
+    let mut client: TestBasicClient = Default::default();
+    let key_data = vec![0xa5; 128];
+    client.set_mock_read(&get_response_bytes_from_result(NativeResult::PsaExportKey(
+        operations::psa_export_key::Result {
+            data: Secret::new(key_data.clone()),
+        },
+    )));
+
+    let key_name = String::from("key-name");
+    // Check response:
+    assert_eq!(
+        client
+            .psa_export_key(key_name.clone())
+            .expect("Failed to export key"),
+        key_data
+    );
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::PsaExportKey(op) = op {
+        assert_eq!(op.key_name, key_name);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+}
+
+#[test]
 fn psa_sign_hash_test() {
     let mut client: TestBasicClient = Default::default();
     let hash = vec![0x77_u8; 32];

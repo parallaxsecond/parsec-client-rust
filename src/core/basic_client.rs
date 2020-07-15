@@ -11,6 +11,7 @@ use parsec_interface::operations::psa_algorithm::{AsymmetricEncryption, Asymmetr
 use parsec_interface::operations::psa_asymmetric_decrypt::Operation as PsaAsymDecrypt;
 use parsec_interface::operations::psa_asymmetric_encrypt::Operation as PsaAsymEncrypt;
 use parsec_interface::operations::psa_destroy_key::Operation as PsaDestroyKey;
+use parsec_interface::operations::psa_export_key::Operation as PsaExportKey;
 use parsec_interface::operations::psa_export_public_key::Operation as PsaExportPublicKey;
 use parsec_interface::operations::psa_generate_key::Operation as PsaGenerateKey;
 use parsec_interface::operations::psa_import_key::Operation as PsaImportKey;
@@ -19,7 +20,7 @@ use parsec_interface::operations::psa_sign_hash::Operation as PsaSignHash;
 use parsec_interface::operations::psa_verify_hash::Operation as PsaVerifyHash;
 use parsec_interface::operations::{NativeOperation, NativeResult};
 use parsec_interface::requests::{Opcode, ProviderID};
-use parsec_interface::secrecy::Secret;
+use parsec_interface::secrecy::{ExposeSecret, Secret};
 use std::collections::HashSet;
 use zeroize::Zeroizing;
 
@@ -415,6 +416,43 @@ impl BasicClient {
 
         if let NativeResult::PsaExportPublicKey(res) = res {
             Ok(res.data.to_vec())
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Cryptographic Operation]** Export a key.
+    ///
+    /// The returned key material will follow the appropriate binary format expressed
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_export_key.html).
+    /// Several crates (e.g. [`picky-asn1`](https://crates.io/crates/picky-asn1))
+    /// can greatly help in dealing with binary encodings.
+    ///
+    /// # Errors
+    ///
+    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// of `InvalidProvider` type is returned.
+    ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_export_key.html#specific-response-status-codes).
+    pub fn psa_export_key(&self, key_name: String) -> Result<Vec<u8>> {
+        let crypto_provider = self.can_provide_crypto()?;
+
+        let op = PsaExportKey { key_name };
+
+        let res = self.op_client.process_operation(
+            NativeOperation::PsaExportKey(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+
+        if let NativeResult::PsaExportKey(res) = res {
+            Ok(res.data.expose_secret().to_vec())
         } else {
             // Should really not be reached given the checks we do, but it's not impossible if some
             // changes happen in the interface
