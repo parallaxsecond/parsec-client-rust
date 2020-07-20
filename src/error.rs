@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Error types specific to the Parsec client
 use parsec_interface::requests::ResponseStatus;
+use std::error;
+use std::fmt;
 
 /// Enum used to denote errors returned to the library user
 #[derive(Debug, PartialEq)]
@@ -11,6 +13,16 @@ pub enum Error {
     /// Errors originating in the client
     Client(ClientErrorKind),
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::Service(response_status) => response_status.fmt(f),
+            Error::Client(client_error_kind) => client_error_kind.fmt(f),
+        }
+    }
+}
+impl error::Error for Error {}
 
 /// Types of errors local to the client library
 #[derive(Debug)]
@@ -71,6 +83,23 @@ impl PartialEq for ClientErrorKind {
                     false
                 }
             }
+        }
+    }
+}
+
+impl fmt::Display for ClientErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ClientErrorKind::Interface(response_status) => response_status.fmt(f),
+            ClientErrorKind::Ipc(error) => error.fmt(f),
+            ClientErrorKind::InvalidServiceResponseType => write!(
+                f,
+                "the opcode of the response does not match the opcode of the request"
+            ),
+            ClientErrorKind::InvalidProvider => {
+                write!(f, "operation not supported by selected provider")
+            }
+            ClientErrorKind::NoProvider => write!(f, "client is missing an implicit provider"),
         }
     }
 }
