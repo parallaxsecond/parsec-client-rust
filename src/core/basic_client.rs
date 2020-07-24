@@ -14,6 +14,7 @@ use parsec_interface::operations::psa_destroy_key::Operation as PsaDestroyKey;
 use parsec_interface::operations::psa_export_key::Operation as PsaExportKey;
 use parsec_interface::operations::psa_export_public_key::Operation as PsaExportPublicKey;
 use parsec_interface::operations::psa_generate_key::Operation as PsaGenerateKey;
+use parsec_interface::operations::psa_generate_random::Operation as PsaGenerateRandom;
 use parsec_interface::operations::psa_import_key::Operation as PsaImportKey;
 use parsec_interface::operations::psa_key_attributes::Attributes;
 use parsec_interface::operations::psa_sign_hash::Operation as PsaSignHash;
@@ -665,6 +666,42 @@ impl BasicClient {
 
         if let NativeResult::PsaAsymmetricDecrypt(res) = decrypt_res {
             Ok(res.plaintext.to_vec())
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Cryptographic Operation]** Generate some random bytes.
+    ///
+    /// Generates a sequence of random bytes and returns them to the user.
+    ///
+    /// # Errors
+    ///
+    /// If this method returns an error, no bytes will have been generated.
+    ///
+    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// of `InvalidProvider` type is returned.
+    ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_generate_random.html).
+    pub fn psa_generate_random(&self, nbytes: usize) -> Result<Vec<u8>> {
+        let crypto_provider = self.can_provide_crypto()?;
+
+        let op = PsaGenerateRandom { size: nbytes };
+
+        let res = self.op_client.process_operation(
+            NativeOperation::PsaGenerateRandom(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+
+        if let NativeResult::PsaGenerateRandom(res) = res {
+            Ok(res.random_bytes.to_vec())
         } else {
             // Should really not be reached given the checks we do, but it's not impossible if some
             // changes happen in the interface
