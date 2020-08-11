@@ -13,7 +13,7 @@ use parsec_interface::operations::ping::Operation as Ping;
 use parsec_interface::operations::psa_aead_decrypt::Operation as PsaAeadDecrypt;
 use parsec_interface::operations::psa_aead_encrypt::Operation as PsaAeadEncrypt;
 use parsec_interface::operations::psa_algorithm::{
-    Aead, AsymmetricEncryption, AsymmetricSignature, Hash,
+    Aead, AsymmetricEncryption, AsymmetricSignature, Hash, RawKeyAgreement,
 };
 use parsec_interface::operations::psa_asymmetric_decrypt::Operation as PsaAsymDecrypt;
 use parsec_interface::operations::psa_asymmetric_encrypt::Operation as PsaAsymEncrypt;
@@ -26,6 +26,7 @@ use parsec_interface::operations::psa_hash_compare::Operation as PsaHashCompare;
 use parsec_interface::operations::psa_hash_compute::Operation as PsaHashCompute;
 use parsec_interface::operations::psa_import_key::Operation as PsaImportKey;
 use parsec_interface::operations::psa_key_attributes::Attributes;
+use parsec_interface::operations::psa_raw_key_agreement::Operation as PsaRawKeyAgreement;
 use parsec_interface::operations::psa_sign_hash::Operation as PsaSignHash;
 use parsec_interface::operations::psa_verify_hash::Operation as PsaVerifyHash;
 use parsec_interface::operations::{NativeOperation, NativeResult};
@@ -868,6 +869,53 @@ impl BasicClient {
 
         if let NativeResult::PsaAeadDecrypt(res) = decrypt_res {
             Ok(res.plaintext.to_vec())
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Cryptographic Operation]** Perform a raw key agreement.
+    ///
+    /// The provided private key **must** have its `derive` flag set
+    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
+    ///
+    /// The raw_key_agreement will be performed with the algorithm defined in `alg`,
+    /// but only after checking that the key policy and type conform with it.
+    ///
+    /// `peer_key` must be the peer public key to use in the raw key derivation. It must
+    /// be in a format supported by [`PsaImportKey`](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_import_key.html).
+    ///
+    /// # Errors
+    ///
+    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// of `InvalidProvider` type is returned.
+    ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_raw_key_agreement.html#specific-response-status-codes).
+    pub fn psa_raw_key_agreement(
+        &self,
+        alg: RawKeyAgreement,
+        private_key_name: String,
+        peer_key: &[u8],
+    ) -> Result<Vec<u8>> {
+        let op = PsaRawKeyAgreement {
+            alg,
+            private_key_name,
+            peer_key: Zeroizing::new(peer_key.to_vec()),
+        };
+        let crypto_provider = self.can_provide_crypto()?;
+        let raw_key_agreement_res = self.op_client.process_operation(
+            NativeOperation::PsaRawKeyAgreement(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+        if let NativeResult::PsaRawKeyAgreement(res) = raw_key_agreement_res {
+            Ok(res.shared_secret.expose_secret().to_vec())
         } else {
             // Should really not be reached given the checks we do, but it's not impossible if some
             // changes happen in the interface
