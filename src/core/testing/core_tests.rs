@@ -559,6 +559,62 @@ fn aead_decrypt_test() {
 }
 
 #[test]
+fn hash_compute_test() {
+    let mut client: TestBasicClient = Default::default();
+    let message = vec![0x77_u8; 32];
+    let hash_algorithm = Hash::Sha256;
+    let hash = vec![0x33_u8; 128];
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::PsaHashCompute(operations::psa_hash_compute::Result {
+            hash: hash.clone().into(),
+        }),
+    ));
+
+    // Check response
+    assert_eq!(
+        client
+            .psa_hash_compute(hash_algorithm, &message,)
+            .expect("Failed to decrypt message"),
+        hash
+    );
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::PsaHashCompute(op) = op {
+        assert_eq!(op.alg, hash_algorithm);
+        assert_eq!(*op.input, message);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+}
+
+#[test]
+fn hash_compare_test() {
+    let mut client: TestBasicClient = Default::default();
+    let message = vec![0x77_u8; 32];
+    let hash_algorithm = Hash::Sha256;
+    let hash = vec![0x33_u8; 128];
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::PsaHashCompare(operations::psa_hash_compare::Result {}),
+    ));
+
+    // Check response
+    client
+        .psa_hash_compare(hash_algorithm, &message, &hash)
+        .expect("Failed to decrypt message");
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::PsaHashCompare(op) = op {
+        assert_eq!(op.alg, hash_algorithm);
+        assert_eq!(*op.input, message);
+        assert_eq!(*op.hash, hash);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+}
+
+#[test]
 fn different_response_type_test() {
     let mut client: TestBasicClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(
