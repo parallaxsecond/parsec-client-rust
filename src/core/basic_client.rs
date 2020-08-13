@@ -7,7 +7,11 @@ use crate::error::{ClientErrorKind, Error, Result};
 use parsec_interface::operations::list_opcodes::Operation as ListOpcodes;
 use parsec_interface::operations::list_providers::{Operation as ListProviders, ProviderInfo};
 use parsec_interface::operations::ping::Operation as Ping;
-use parsec_interface::operations::psa_algorithm::{AsymmetricEncryption, AsymmetricSignature};
+use parsec_interface::operations::psa_aead_decrypt::Operation as PsaAeadDecrypt;
+use parsec_interface::operations::psa_aead_encrypt::Operation as PsaAeadEncrypt;
+use parsec_interface::operations::psa_algorithm::{
+    Aead, AsymmetricEncryption, AsymmetricSignature,
+};
 use parsec_interface::operations::psa_asymmetric_decrypt::Operation as PsaAsymDecrypt;
 use parsec_interface::operations::psa_asymmetric_encrypt::Operation as PsaAsymEncrypt;
 use parsec_interface::operations::psa_destroy_key::Operation as PsaDestroyKey;
@@ -621,12 +625,13 @@ impl BasicClient {
     /// The key intended for decrypting **must** have its `decrypt` flag set
     /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
     ///
-    /// The decryption will be performed with the algorithm defined in `alg`,
-    /// but only after checking that the key policy and type conform with it.
-    ///
     /// `salt` can be provided if supported by the algorithm. If the algorithm does not support salt, pass
     //    an empty vector. If the algorithm supports optional salt, pass an empty vector to indicate no
     //    salt. For RSA PKCS#1 v1.5 encryption, no salt is supported.
+    ///
+    ///
+    /// The decryption will be performed with the algorithm defined in `alg`,
+    /// but only after checking that the key policy and type conform with it.
     ///
     /// # Errors
     ///
@@ -665,6 +670,118 @@ impl BasicClient {
         )?;
 
         if let NativeResult::PsaAsymmetricDecrypt(res) = decrypt_res {
+            Ok(res.plaintext.to_vec())
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Cryptographic Operation]** Authenticate and encrypt a short message.
+    ///
+    /// The key intended for decrypting **must** have its `encrypt` flag set
+    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
+    ///
+    /// The encryption will be performed with the algorithm defined in `alg`,
+    /// but only after checking that the key policy and type conform with it.
+    ///
+    /// `nonce` must be appropriate for the selected `alg`.
+    ///
+    /// For algorithms where the encrypted data and the authentication tag are defined as separate outputs,
+    /// the returned buffer will contain the encrypted data followed by the authentication data.
+    ///
+    /// # Errors
+    ///
+    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// of `InvalidProvider` type is returned.
+    ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_aead_encrypt.html#specific-response-status-codes).
+    pub fn psa_aead_encrypt(
+        &self,
+        key_name: String,
+        encrypt_alg: Aead,
+        nonce: &[u8],
+        additional_data: &[u8],
+        plaintext: &[u8],
+    ) -> Result<Vec<u8>> {
+        let crypto_provider = self.can_provide_crypto()?;
+
+        let op = PsaAeadEncrypt {
+            key_name,
+            alg: encrypt_alg,
+            nonce: nonce.to_vec().into(),
+            additional_data: additional_data.to_vec().into(),
+            plaintext: plaintext.to_vec().into(),
+        };
+
+        let encrypt_res = self.op_client.process_operation(
+            NativeOperation::PsaAeadEncrypt(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+
+        if let NativeResult::PsaAeadEncrypt(res) = encrypt_res {
+            Ok(res.ciphertext.to_vec())
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Cryptographic Operation]** Decrypt and authenticate a short message.
+    ///
+    /// The key intended for decrypting **must** have its `decrypt` flag set
+    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
+    ///
+    /// The decryption will be performed with the algorithm defined in `alg`,
+    /// but only after checking that the key policy and type conform with it.
+    ///
+    /// `nonce` must be appropriate for the selected `alg`.
+    ///
+    /// For algorithms where the encrypted data and the authentication tag are defined as separate inputs,
+    /// `ciphertext` must contain the encrypted data followed by the authentication data.
+    ///
+    /// # Errors
+    ///
+    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// of `InvalidProvider` type is returned.
+    ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_aead_decrypt.html#specific-response-status-codes).
+    pub fn psa_aead_decrypt(
+        &self,
+        key_name: String,
+        encrypt_alg: Aead,
+        nonce: &[u8],
+        additional_data: &[u8],
+        ciphertext: &[u8],
+    ) -> Result<Vec<u8>> {
+        let crypto_provider = self.can_provide_crypto()?;
+
+        let op = PsaAeadDecrypt {
+            key_name,
+            alg: encrypt_alg,
+            nonce: nonce.to_vec().into(),
+            additional_data: additional_data.to_vec().into(),
+            ciphertext: ciphertext.to_vec().into(),
+        };
+
+        let decrypt_res = self.op_client.process_operation(
+            NativeOperation::PsaAeadDecrypt(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+
+        if let NativeResult::PsaAeadDecrypt(res) = decrypt_res {
             Ok(res.plaintext.to_vec())
         } else {
             // Should really not be reached given the checks we do, but it's not impossible if some
