@@ -20,6 +20,7 @@ use parsec_interface::requests::{AuthType, BodyType, Opcode};
 use parsec_interface::secrecy::{ExposeSecret, Secret};
 use std::collections::HashSet;
 use std::io::ErrorKind;
+use zeroize::Zeroizing;
 
 const PROTOBUF_CONVERTER: ProtobufConverter = ProtobufConverter {};
 const REQ_HEADER: RequestHeader = RequestHeader {
@@ -343,6 +344,33 @@ fn psa_sign_hash_test() {
         assert_eq!(op.key_name, key_name);
         assert_eq!(op.hash.to_vec(), hash);
         assert_eq!(op.alg, sign_algorithm);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+}
+
+#[test]
+fn psa_generate_random_test() {
+    let mut client: TestBasicClient = Default::default();
+    let mock_result = vec![0xDE, 0xAD, 0xBE, 0xEF];
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::PsaGenerateRandom(operations::psa_generate_random::Result {
+            random_bytes: Zeroizing::from(mock_result.clone()),
+        }),
+    ));
+
+    // Check response:
+    assert_eq!(
+        client
+            .psa_generate_random(4)
+            .expect("failed to generate random"),
+        mock_result
+    );
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::PsaGenerateRandom(op) = op {
+        assert_eq!(op.size, 4);
     } else {
         panic!("Got wrong operation type: {:?}", op);
     }
