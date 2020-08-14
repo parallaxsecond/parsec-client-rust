@@ -430,7 +430,7 @@ fn asymmetric_decrypt_test() {
     assert_eq!(
         client
             .psa_asymmetric_decrypt(key_name.clone(), encrypt_algorithm, &ciphertext, None)
-            .expect("Failed to encrypt message"),
+            .expect("Failed to decrypt message"),
         plaintext
     );
 
@@ -441,6 +441,90 @@ fn asymmetric_decrypt_test() {
         assert_eq!(op.alg, encrypt_algorithm);
         assert_eq!(*op.ciphertext, ciphertext);
         assert_eq!(op.salt, None);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+}
+
+#[test]
+fn aead_encrypt_test() {
+    let mut client: TestBasicClient = Default::default();
+    let plaintext = vec![0x77_u8; 32];
+    let nonce = vec![0x0_u8; 32];
+    let key_name = String::from("key_name");
+    let encrypt_algorithm = Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm);
+    let ciphertext = vec![0x33_u8; 128];
+    let additional_data = vec![0x55_u8; 128];
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::PsaAeadEncrypt(operations::psa_aead_encrypt::Result {
+            ciphertext: ciphertext.clone().into(),
+        }),
+    ));
+
+    // Check response
+    assert_eq!(
+        client
+            .psa_aead_encrypt(
+                key_name.clone(),
+                encrypt_algorithm,
+                &nonce,
+                &additional_data,
+                &plaintext
+            )
+            .expect("Failed to encrypt message"),
+        ciphertext
+    );
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::PsaAeadEncrypt(op) = op {
+        assert_eq!(op.key_name, key_name);
+        assert_eq!(op.alg, encrypt_algorithm);
+        assert_eq!(*op.plaintext, plaintext);
+        assert_eq!(*op.nonce, nonce);
+        assert_eq!(*op.additional_data, additional_data);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+}
+
+#[test]
+fn aead_decrypt_test() {
+    let mut client: TestBasicClient = Default::default();
+    let plaintext = vec![0x77_u8; 32];
+    let nonce = vec![0x0_u8; 32];
+    let key_name = String::from("key_name");
+    let encrypt_algorithm = Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm);
+    let ciphertext = vec![0x33_u8; 128];
+    let additional_data = vec![0x55_u8; 128];
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::PsaAeadDecrypt(operations::psa_aead_decrypt::Result {
+            plaintext: plaintext.clone().into(),
+        }),
+    ));
+
+    // Check response
+    assert_eq!(
+        client
+            .psa_aead_decrypt(
+                key_name.clone(),
+                encrypt_algorithm,
+                &nonce,
+                &additional_data,
+                &ciphertext
+            )
+            .expect("Failed to decrypt message"),
+        plaintext
+    );
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::PsaAeadDecrypt(op) = op {
+        assert_eq!(op.key_name, key_name);
+        assert_eq!(op.alg, encrypt_algorithm);
+        assert_eq!(*op.ciphertext, ciphertext);
+        assert_eq!(*op.nonce, nonce);
+        assert_eq!(*op.additional_data, additional_data);
     } else {
         panic!("Got wrong operation type: {:?}", op);
     }
