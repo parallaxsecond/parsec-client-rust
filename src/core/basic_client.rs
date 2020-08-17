@@ -13,7 +13,7 @@ use parsec_interface::operations::ping::Operation as Ping;
 use parsec_interface::operations::psa_aead_decrypt::Operation as PsaAeadDecrypt;
 use parsec_interface::operations::psa_aead_encrypt::Operation as PsaAeadEncrypt;
 use parsec_interface::operations::psa_algorithm::{
-    Aead, AsymmetricEncryption, AsymmetricSignature,
+    Aead, AsymmetricEncryption, AsymmetricSignature, Hash,
 };
 use parsec_interface::operations::psa_asymmetric_decrypt::Operation as PsaAsymDecrypt;
 use parsec_interface::operations::psa_asymmetric_encrypt::Operation as PsaAsymEncrypt;
@@ -22,6 +22,8 @@ use parsec_interface::operations::psa_export_key::Operation as PsaExportKey;
 use parsec_interface::operations::psa_export_public_key::Operation as PsaExportPublicKey;
 use parsec_interface::operations::psa_generate_key::Operation as PsaGenerateKey;
 use parsec_interface::operations::psa_generate_random::Operation as PsaGenerateRandom;
+use parsec_interface::operations::psa_hash_compare::Operation as PsaHashCompare;
+use parsec_interface::operations::psa_hash_compute::Operation as PsaHashCompute;
 use parsec_interface::operations::psa_import_key::Operation as PsaImportKey;
 use parsec_interface::operations::psa_key_attributes::Attributes;
 use parsec_interface::operations::psa_sign_hash::Operation as PsaSignHash;
@@ -695,6 +697,70 @@ impl BasicClient {
             // changes happen in the interface
             Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
         }
+    }
+    /// **[Cryptographic Operation]** Compute hash of a message.
+    ///
+    /// The hash computation will be performed with the algorithm defined in `alg`.
+    ///
+    /// # Errors
+    ///
+    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// of `InvalidProvider` type is returned.
+    ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_hash_compute.html#specific-response-status-codes).
+    pub fn psa_hash_compute(&self, alg: Hash, input: &[u8]) -> Result<Vec<u8>> {
+        let crypto_provider = self.can_provide_crypto()?;
+        let op = PsaHashCompute {
+            alg,
+            input: input.to_vec().into(),
+        };
+        let hash_compute_res = self.op_client.process_operation(
+            NativeOperation::PsaHashCompute(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+        if let NativeResult::PsaHashCompute(res) = hash_compute_res {
+            Ok(res.hash.to_vec())
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Cryptographic Operation]** Compute hash of a message and compare it with a reference value.
+    ///
+    /// The hash computation will be performed with the algorithm defined in `alg`.
+    ///
+    /// If this operation returns no error, the hash was computed successfully and it matches the reference value.
+    ///
+    /// # Errors
+    ///
+    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// of `InvalidProvider` type is returned.
+    ///
+    /// If the implicit client provider has not been set, a client error of
+    /// `NoProvider` type is returned.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_hash_compare.html#specific-response-status-codes).
+    pub fn psa_hash_compare(&self, alg: Hash, input: &[u8], hash: &[u8]) -> Result<()> {
+        let crypto_provider = self.can_provide_crypto()?;
+        let op = PsaHashCompare {
+            alg,
+            input: input.to_vec().into(),
+            hash: hash.to_vec().into(),
+        };
+        let _ = self.op_client.process_operation(
+            NativeOperation::PsaHashCompare(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+        Ok(())
     }
 
     /// **[Cryptographic Operation]** Authenticate and encrypt a short message.
