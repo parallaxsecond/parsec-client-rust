@@ -615,6 +615,38 @@ fn hash_compare_test() {
 }
 
 #[test]
+fn raw_key_agreement_test() {
+    let mut client: TestBasicClient = Default::default();
+    let key_name = String::from("key_name");
+    let agreement_alg = RawKeyAgreement::Ecdh;
+    let peer_key = vec![0x33_u8; 128];
+    let shared_secret = vec![0xff_u8, 64];
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::PsaRawKeyAgreement(operations::psa_raw_key_agreement::Result {
+            shared_secret: Secret::new(shared_secret.clone()),
+        }),
+    ));
+
+    // Check response
+    assert_eq!(
+        client
+            .psa_raw_key_agreement(agreement_alg, key_name.clone(), &peer_key)
+            .expect("Failed key agreement"),
+        shared_secret
+    );
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::PsaRawKeyAgreement(op) = op {
+        assert_eq!(op.private_key_name, key_name);
+        assert_eq!(op.alg, agreement_alg);
+        assert_eq!(*op.peer_key, peer_key);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+}
+
+#[test]
 fn different_response_type_test() {
     let mut client: TestBasicClient = Default::default();
     client.set_mock_read(&get_response_bytes_from_result(
