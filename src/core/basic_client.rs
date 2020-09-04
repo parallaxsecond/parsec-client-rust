@@ -92,7 +92,7 @@ use zeroize::Zeroizing;
 ///# use parsec_client::core::secrecy::Secret;
 ///# use parsec_client::core::interface::requests::ProviderID;
 ///# let client: BasicClient = BasicClient::new(AuthenticationData::AppIdentity(Secret::new(String::from("app-name"))));
-///use uuid::Uuid;
+///use parsec_interface::operations::list_providers::Uuid;
 ///
 ///// Identify provider by its UUID (in this case, the PKCS11 provider)
 ///let desired_provider_uuid = Uuid::parse_str("30e39502-eba6-4d60-a4af-c518b7f5e38f").unwrap();
