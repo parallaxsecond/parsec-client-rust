@@ -6,7 +6,7 @@ use crate::error::{ClientErrorKind, Error};
 use crate::BasicClient;
 use mockstream::{FailingMockStream, MockStream};
 use parsec_interface::operations;
-use parsec_interface::operations::list_providers::ProviderInfo;
+use parsec_interface::operations::list_providers::{ProviderInfo, Uuid};
 use parsec_interface::operations::psa_algorithm::*;
 use parsec_interface::operations::psa_key_attributes::*;
 use parsec_interface::operations::Convert;
@@ -76,7 +76,7 @@ fn list_provider_test() {
     let mut client: TestBasicClient = Default::default();
     let mut provider_info = Vec::new();
     provider_info.push(ProviderInfo {
-        uuid: uuid::Uuid::nil(),
+        uuid: Uuid::nil(),
         description: String::from("Some empty provider"),
         vendor: String::from("Arm Ltd."),
         version_maj: 1,
@@ -95,7 +95,7 @@ fn list_provider_test() {
 
     // Check response:
     assert_eq!(providers.len(), 1);
-    assert_eq!(providers[0].uuid, uuid::Uuid::nil());
+    assert_eq!(providers[0].uuid, Uuid::nil());
 }
 
 #[test]
