@@ -189,6 +189,9 @@ impl BasicClient {
     /// Before you can use this client for cryptographic operations, you first need to call
     /// [`set_implicit_provider`](#method.set_implicit_provider). In order to get a list of
     /// supported providers, call the [`list_providers`](#method.list_providers) method.
+    ///
+    /// This client will use the default configuration. That includes using a Protobuf converter
+    /// for message bodies and a Unix Domain Socket IPC handler.
     pub fn new(auth_data: AuthenticationData) -> Self {
         BasicClient {
             op_client: Default::default(),

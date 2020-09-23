@@ -18,7 +18,7 @@ use std::io::{Error, ErrorKind};
 #[cfg(not(feature = "no-fs-permission-check"))]
 use std::os::unix::fs::MetadataExt;
 
-const DEFAULT_SOCKET_PATH: &str = "/tmp/parsec/parsec.sock";
+const DEFAULT_SOCKET_PATH: &str = "/run/parsec/parsec.sock";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
 
 /// IPC handler for Unix domain sockets
