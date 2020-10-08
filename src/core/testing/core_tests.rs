@@ -6,6 +6,7 @@ use crate::error::{ClientErrorKind, Error};
 use crate::BasicClient;
 use mockstream::{FailingMockStream, MockStream};
 use parsec_interface::operations;
+use parsec_interface::operations::list_keys::KeyInfo;
 use parsec_interface::operations::list_providers::{ProviderInfo, Uuid};
 use parsec_interface::operations::psa_algorithm::*;
 use parsec_interface::operations::psa_key_attributes::*;
@@ -116,6 +117,57 @@ fn list_opcodes_test() {
     // Check response:
     assert_eq!(opcodes.len(), 2);
     assert!(opcodes.contains(&Opcode::PsaGenerateKey) && opcodes.contains(&Opcode::PsaDestroyKey));
+}
+
+#[test]
+fn list_keys_test() {
+    use parsec_interface::operations::psa_key_attributes::{
+        Attributes, Lifetime, Policy, Type, UsageFlags,
+    };
+
+    let mut client: TestBasicClient = Default::default();
+    let mut key_info = Vec::new();
+    key_info.push(KeyInfo {
+        provider_id: ProviderID::MbedCrypto,
+        name: String::from("Foo"),
+        attributes: Attributes {
+            lifetime: Lifetime::Persistent,
+            key_type: Type::RsaKeyPair,
+            bits: 1024,
+            policy: Policy {
+                usage_flags: UsageFlags {
+                    export: true,
+                    copy: true,
+                    cache: true,
+                    encrypt: true,
+                    decrypt: true,
+                    sign_message: true,
+                    verify_message: true,
+                    sign_hash: true,
+                    verify_hash: true,
+                    derive: true,
+                },
+                permitted_algorithms: Algorithm::AsymmetricSignature(
+                    AsymmetricSignature::RsaPkcs1v15Sign {
+                        hash_alg: Hash::Sha256.into(),
+                    },
+                ),
+            },
+        },
+    });
+
+    client.set_mock_read(&get_response_bytes_from_result(NativeResult::ListKeys(
+        operations::list_keys::Result { keys: key_info },
+    )));
+
+    let keys = client.list_keys().expect("Failed to list keys");
+    // Check request:
+    // ListKeys request is empty so no checking to be done
+
+    // Check response:
+    assert_eq!(keys.len(), 1);
+    assert_eq!(keys[0].name, "Foo");
+    assert_eq!(keys[0].provider_id, ProviderID::MbedCrypto);
 }
 
 #[test]
