@@ -258,6 +258,7 @@ impl BasicClient {
                 AuthType::UnixPeerCredentials => {
                     self.auth_data = Authentication::UnixPeerCredentials
                 }
+                AuthType::JwtSvid => self.auth_data = Authentication::JwtSvid,
                 auth => {
                     warn!(
                         "Authenticator of type \"{:?}\" not supported by this client library",

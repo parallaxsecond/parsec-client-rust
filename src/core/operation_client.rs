@@ -12,6 +12,7 @@ use parsec_interface::operations_protobuf::ProtobufConverter;
 use parsec_interface::requests::{
     request::RequestHeader, Opcode, ProviderID, Request, Response, ResponseStatus,
 };
+use std::convert::TryInto;
 
 /// Low-level client optimised for communicating with the Parsec service at an operation level.
 ///
@@ -66,7 +67,7 @@ impl OperationClient {
         Ok(Request {
             header,
             body,
-            auth: auth.into(),
+            auth: auth.try_into()?,
         })
     }
 

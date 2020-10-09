@@ -19,6 +19,7 @@ log = "0.4.11"
 derivative = "2.1.1"
 zeroize = "1.1.0"
 users = "0.10.0"
+spiffe = { path = "../../rust-spiffe/spiffe" }
 
 [dev-dependencies]
 mockstream = "0.0.3"
