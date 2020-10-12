@@ -7,6 +7,7 @@ use crate::error::{ClientErrorKind, Error, Result};
 use parsec_interface::operations::list_authenticators::{
     AuthenticatorInfo, Operation as ListAuthenticators,
 };
+use parsec_interface::operations::list_keys::{KeyInfo, Operation as ListKeys};
 use parsec_interface::operations::list_opcodes::Operation as ListOpcodes;
 use parsec_interface::operations::list_providers::{Operation as ListProviders, ProviderInfo};
 use parsec_interface::operations::ping::Operation as Ping;
@@ -264,6 +265,22 @@ impl BasicClient {
         )?;
         if let NativeResult::ListAuthenticators(res) = res {
             Ok(res.authenticators)
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Core Operation]** List all keys belonging to the application.
+    pub fn list_keys(&self) -> Result<Vec<KeyInfo>> {
+        let res = self.op_client.process_operation(
+            NativeOperation::ListKeys(ListKeys {}),
+            ProviderID::Core,
+            &self.auth_data,
+        )?;
+        if let NativeResult::ListKeys(res) = res {
+            Ok(res.keys)
         } else {
             // Should really not be reached given the checks we do, but it's not impossible if some
             // changes happen in the interface
