@@ -13,7 +13,7 @@ edition = "2018"
 documentation = "https://docs.rs/crate/parsec-client"
 
 [dependencies]
-parsec-interface = "0.20.2"
+parsec-interface = { git = "https://github.com/parallaxsecond/parsec-interface-rs.git", rev = "ce3590dc0cb7f345f328fec0dc22073da1b4699c" }
 num = "0.3.0"
 log = "0.4.11"
 derivative = "2.1.1"
@@ -26,6 +26,3 @@ mockstream = "0.0.3"
 [features]
 testing = ["parsec-interface/testing", "no-fs-permission-check"]
 no-fs-permission-check = []
-
-[patch.crates-io]
-parsec-interface = { git = "https://github.com/parallaxsecond/parsec-interface-rs.git", rev = "ce3590dc0cb7f345f328fec0dc22073da1b4699c" }
