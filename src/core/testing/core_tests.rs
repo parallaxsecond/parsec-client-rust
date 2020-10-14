@@ -775,6 +775,25 @@ fn auth_value_test() {
 }
 
 #[test]
+fn peer_credential_auth_test() {
+    let mut client: TestBasicClient = Default::default();
+    client.set_auth_data(AuthenticationData::UnixPeerCredentials);
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::PsaDestroyKey(operations::psa_destroy_key::Result {}),
+    ));
+    let key_name = String::from("key-name");
+    client
+        .psa_destroy_key(key_name)
+        .expect("Failed to call destroy key");
+
+    let req = get_req_from_bytes(client.get_mock_write());
+    assert_eq!(
+        &users::get_current_uid().to_le_bytes().to_vec(),
+        req.auth.buffer.expose_secret()
+    );
+}
+
+#[test]
 fn failing_ipc_test() {
     let mut client: TestBasicClient = Default::default();
     client.set_ipc_handler(Box::from(FailingMockIpc(FailingMockStream::new(
