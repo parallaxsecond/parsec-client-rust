@@ -24,5 +24,4 @@ users = "0.10.0"
 mockstream = "0.0.3"
 
 [features]
-testing = ["parsec-interface/testing", "no-fs-permission-check"]
-no-fs-permission-check = []
+testing = ["parsec-interface/testing"]
