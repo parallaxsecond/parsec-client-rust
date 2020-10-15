@@ -3,11 +3,10 @@
 #![cfg(test)]
 use super::basic_client::BasicClient;
 use super::ipc_handler::{Connect, ReadWrite};
-use crate::auth::AuthenticationData;
+use crate::auth::Authentication;
 use crate::error::Result;
 use mockstream::{FailingMockStream, SyncMockStream};
 use parsec_interface::requests::ProviderID;
-use parsec_interface::secrecy::Secret;
 use std::ops::{Deref, DerefMut};
 use std::time::Duration;
 
@@ -66,14 +65,15 @@ impl DerefMut for TestBasicClient {
 
 impl Default for TestBasicClient {
     fn default() -> Self {
+        let core_client = BasicClient {
+            op_client: Default::default(),
+            auth_data: Authentication::Direct(String::from(DEFAULT_APP_NAME)),
+            implicit_provider: ProviderID::Pkcs11,
+        };
         let mut client = TestBasicClient {
-            core_client: BasicClient::new(AuthenticationData::AppIdentity(Secret::new(
-                String::from(DEFAULT_APP_NAME),
-            ))),
+            core_client,
             mock_stream: SyncMockStream::new(),
         };
-
-        client.core_client.set_implicit_provider(ProviderID::Pkcs11);
 
         client
             .core_client

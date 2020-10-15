@@ -4,7 +4,7 @@
 #![allow(dead_code)]
 
 use super::request_client::RequestClient;
-use crate::auth::AuthenticationData;
+use crate::auth::Authentication;
 use crate::error::{ClientErrorKind, Error, Result};
 use derivative::Derivative;
 use parsec_interface::operations::{Convert, NativeOperation, NativeResult};
@@ -47,7 +47,7 @@ impl OperationClient {
         &self,
         operation: NativeOperation,
         provider: ProviderID,
-        auth: &AuthenticationData,
+        auth: &Authentication,
     ) -> Result<Request> {
         let opcode = operation.opcode();
         let body = self
@@ -100,7 +100,7 @@ impl OperationClient {
         &self,
         operation: NativeOperation,
         provider: ProviderID,
-        auth: &AuthenticationData,
+        auth: &Authentication,
     ) -> Result<NativeResult> {
         let req_opcode = operation.opcode();
         let request = self.operation_to_request(operation, provider, auth)?;

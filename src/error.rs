@@ -37,6 +37,11 @@ pub enum ClientErrorKind {
     InvalidProvider,
     /// Client is missing an implicit provider
     NoProvider,
+    /// Service is missing authenticator or none of the authenticators is supported
+    /// by the client
+    NoAuthenticator,
+    /// Required parameter was not provided
+    MissingParam,
 }
 
 impl From<ClientErrorKind> for Error {
@@ -67,6 +72,8 @@ impl PartialEq for ClientErrorKind {
             }
             ClientErrorKind::InvalidProvider => matches!(other, ClientErrorKind::InvalidProvider),
             ClientErrorKind::NoProvider => matches!(other, ClientErrorKind::NoProvider),
+            ClientErrorKind::NoAuthenticator => matches!(other, ClientErrorKind::NoAuthenticator),
+            ClientErrorKind::MissingParam => matches!(other, ClientErrorKind::MissingParam),
         }
     }
 }
@@ -84,6 +91,8 @@ impl fmt::Display for ClientErrorKind {
                 write!(f, "operation not supported by selected provider")
             }
             ClientErrorKind::NoProvider => write!(f, "client is missing an implicit provider"),
+            ClientErrorKind::NoAuthenticator => write!(f, "service is not reporting any authenticators or none of the reported ones are supported by the client"),
+            ClientErrorKind::MissingParam => write!(f, "one of the `Option` parameters was required but was not provided"),
         }
     }
 }
