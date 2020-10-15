@@ -63,26 +63,10 @@ impl PartialEq for ClientErrorKind {
                 }
             }
             ClientErrorKind::InvalidServiceResponseType => {
-                if let ClientErrorKind::InvalidServiceResponseType = other {
-                    true
-                } else {
-                    false
-                }
+                matches!(other, ClientErrorKind::InvalidServiceResponseType)
             }
-            ClientErrorKind::InvalidProvider => {
-                if let ClientErrorKind::InvalidProvider = other {
-                    true
-                } else {
-                    false
-                }
-            }
-            ClientErrorKind::NoProvider => {
-                if let ClientErrorKind::NoProvider = other {
-                    true
-                } else {
-                    false
-                }
-            }
+            ClientErrorKind::InvalidProvider => matches!(other, ClientErrorKind::InvalidProvider),
+            ClientErrorKind::NoProvider => matches!(other, ClientErrorKind::NoProvider),
         }
     }
 }
