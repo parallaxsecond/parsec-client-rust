@@ -15,6 +15,9 @@ pub enum AuthenticationData {
     /// The `Secret` struct can be imported from
     /// `parsec_client::core::secrecy::Secret`.
     AppIdentity(Secret<String>),
+    /// Used for authentication via Peer Credentials provided by Unix
+    /// operating systems for Domain Socket connections.
+    UnixPeerCredentials,
 }
 
 impl AuthenticationData {
@@ -23,6 +26,7 @@ impl AuthenticationData {
         match self {
             AuthenticationData::None => AuthType::NoAuth,
             AuthenticationData::AppIdentity(_) => AuthType::Direct,
+            AuthenticationData::UnixPeerCredentials => AuthType::UnixPeerCredentials,
         }
     }
 }
@@ -33,6 +37,10 @@ impl From<&AuthenticationData> for RequestAuth {
             AuthenticationData::None => RequestAuth::new(Vec::new()),
             AuthenticationData::AppIdentity(name) => {
                 RequestAuth::new(name.expose_secret().bytes().collect())
+            }
+            AuthenticationData::UnixPeerCredentials => {
+                let current_uid = users::get_current_uid();
+                RequestAuth::new(current_uid.to_le_bytes().to_vec())
             }
         }
     }
