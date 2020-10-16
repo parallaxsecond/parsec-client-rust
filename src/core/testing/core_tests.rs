@@ -1,11 +1,11 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 use super::{FailingMockIpc, TestBasicClient, DEFAULT_APP_NAME};
-use crate::auth::AuthenticationData;
+use crate::auth::Authentication;
 use crate::error::{ClientErrorKind, Error};
-use crate::BasicClient;
 use mockstream::{FailingMockStream, MockStream};
 use parsec_interface::operations;
+use parsec_interface::operations::list_authenticators::AuthenticatorInfo;
 use parsec_interface::operations::list_keys::KeyInfo;
 use parsec_interface::operations::list_providers::{ProviderInfo, Uuid};
 use parsec_interface::operations::psa_algorithm::*;
@@ -171,23 +171,8 @@ fn list_keys_test() {
 }
 
 #[test]
-fn no_crypto_provider_test() {
-    let client = BasicClient::new(AuthenticationData::AppIdentity(Secret::new(String::from(
-        "oops",
-    ))));
-
-    let res = client
-        .psa_destroy_key(String::from("random key"))
-        .expect_err("Expected a failure!!");
-
-    assert_eq!(res, Error::Client(ClientErrorKind::NoProvider));
-}
-
-#[test]
 fn core_provider_for_crypto_test() {
-    let mut client = BasicClient::new(AuthenticationData::AppIdentity(Secret::new(String::from(
-        "oops",
-    ))));
+    let mut client: TestBasicClient = Default::default();
 
     client.set_implicit_provider(ProviderID::Core);
     let res = client
@@ -777,7 +762,7 @@ fn auth_value_test() {
 #[test]
 fn peer_credential_auth_test() {
     let mut client: TestBasicClient = Default::default();
-    client.set_auth_data(AuthenticationData::UnixPeerCredentials);
+    client.set_auth_data(Authentication::UnixPeerCredentials);
     client.set_mock_read(&get_response_bytes_from_result(
         NativeResult::PsaDestroyKey(operations::psa_destroy_key::Result {}),
     ));
@@ -807,4 +792,98 @@ fn failing_ipc_test() {
         err,
         Error::Client(ClientErrorKind::Interface(ResponseStatus::ConnectionError))
     );
+}
+
+#[test]
+fn set_default_auth_one_entry() {
+    let mut client: TestBasicClient = Default::default();
+    client.set_auth_data(Authentication::UnixPeerCredentials);
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::ListAuthenticators(operations::list_authenticators::Result {
+            authenticators: vec![AuthenticatorInfo {
+                description: String::new(),
+                version_maj: 1,
+                version_min: 0,
+                version_rev: 0,
+                id: AuthType::UnixPeerCredentials,
+            }],
+        }),
+    ));
+
+    client.set_default_auth(None).unwrap();
+    assert_eq!(client.auth_data(), Authentication::UnixPeerCredentials);
+}
+
+#[test]
+fn set_default_auth_three_entries() {
+    let mut client: TestBasicClient = Default::default();
+    client.set_auth_data(Authentication::UnixPeerCredentials);
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::ListAuthenticators(operations::list_authenticators::Result {
+            authenticators: vec![
+                AuthenticatorInfo {
+                    description: String::new(),
+                    version_maj: 1,
+                    version_min: 0,
+                    version_rev: 0,
+                    id: AuthType::JWT,
+                },
+                AuthenticatorInfo {
+                    description: String::new(),
+                    version_maj: 1,
+                    version_min: 0,
+                    version_rev: 0,
+                    id: AuthType::NoAuth,
+                },
+                AuthenticatorInfo {
+                    description: String::new(),
+                    version_maj: 1,
+                    version_min: 0,
+                    version_rev: 0,
+                    id: AuthType::UnixPeerCredentials,
+                },
+            ],
+        }),
+    ));
+
+    client.set_default_auth(None).unwrap();
+    assert_eq!(client.auth_data(), Authentication::UnixPeerCredentials);
+}
+
+#[test]
+fn set_default_auth_direct() {
+    let mut client: TestBasicClient = Default::default();
+    client.set_auth_data(Authentication::UnixPeerCredentials);
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::ListAuthenticators(operations::list_authenticators::Result {
+            authenticators: vec![AuthenticatorInfo {
+                description: String::new(),
+                version_maj: 1,
+                version_min: 0,
+                version_rev: 0,
+                id: AuthType::Direct,
+            }],
+        }),
+    ));
+
+    assert_eq!(
+        client.set_default_auth(None).unwrap_err(),
+        Error::Client(ClientErrorKind::MissingParam)
+    );
+
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::ListAuthenticators(operations::list_authenticators::Result {
+            authenticators: vec![AuthenticatorInfo {
+                description: String::new(),
+                version_maj: 1,
+                version_min: 0,
+                version_rev: 0,
+                id: AuthType::Direct,
+            }],
+        }),
+    ));
+
+    let app_name = String::from("some_app_name");
+    client.set_default_auth(Some(app_name.clone())).unwrap();
+    assert_eq!(client.auth_data(), Authentication::Direct(app_name));
 }
