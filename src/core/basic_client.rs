@@ -209,6 +209,27 @@ impl BasicClient {
         Ok(client)
     }
 
+    /// Create a client that can initially only be used with Core operations not necessitating
+    /// authentication (eg ping).
+    ///
+    /// Setting an authentication method and an implicit provider is needed before calling crypto
+    /// operations.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    ///use parsec_client::BasicClient;
+    ///let client = BasicClient::new_naked();
+    ///let (major, minor) = client.ping().unwrap();
+    /// ```
+    pub fn new_naked() -> Self {
+        BasicClient {
+            op_client: Default::default(),
+            auth_data: Authentication::None,
+            implicit_provider: ProviderID::Core,
+        }
+    }
+
     /// Query the service for the list of authenticators provided and use the first one as default
     ///
     /// * `app_name` is to be used if direct authentication is the default choice
