@@ -826,7 +826,7 @@ fn set_default_auth_three_entries() {
                     version_maj: 1,
                     version_min: 0,
                     version_rev: 0,
-                    id: AuthType::JWT,
+                    id: AuthType::Jwt,
                 },
                 AuthenticatorInfo {
                     description: String::new(),
