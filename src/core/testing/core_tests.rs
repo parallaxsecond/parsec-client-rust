@@ -179,7 +179,10 @@ fn core_provider_for_crypto_test() {
         .psa_destroy_key(String::from("random key"))
         .expect_err("Expected a failure!!");
 
-    assert_eq!(res, Error::Client(ClientErrorKind::InvalidProvider));
+    assert!(matches!(
+        res,
+        Error::Client(ClientErrorKind::InvalidProvider)
+    ));
 }
 
 #[test]
@@ -694,10 +697,10 @@ fn different_response_type_test() {
         .psa_destroy_key(key_name)
         .expect_err("Error was expected");
 
-    assert_eq!(
+    assert!(matches!(
         err,
         Error::Client(ClientErrorKind::InvalidServiceResponseType)
-    );
+    ));
 }
 
 #[test]
@@ -711,7 +714,10 @@ fn response_status_test() {
     client.set_mock_read(&stream.pop_bytes_written());
     let err = client.ping().expect_err("Error was expected");
 
-    assert_eq!(err, Error::Service(status));
+    assert!(matches!(
+        err,
+        Error::Service(ResponseStatus::PsaErrorDataCorrupt)
+    ));
 }
 
 #[test]
@@ -720,10 +726,10 @@ fn malformed_response_test() {
     client.set_mock_read(&[0xcb_u8; 130]);
     let err = client.ping().expect_err("Error was expected");
 
-    assert_eq!(
+    assert!(matches!(
         err,
         Error::Client(ClientErrorKind::Interface(ResponseStatus::InvalidHeader))
-    );
+    ));
 }
 
 #[test]
@@ -788,10 +794,10 @@ fn failing_ipc_test() {
     ))));
 
     let err = client.ping().expect_err("Expected to fail");
-    assert_eq!(
+    assert!(matches!(
         err,
         Error::Client(ClientErrorKind::Interface(ResponseStatus::ConnectionError))
-    );
+    ));
 }
 
 #[test]
@@ -866,10 +872,10 @@ fn set_default_auth_direct() {
         }),
     ));
 
-    assert_eq!(
+    assert!(matches!(
         client.set_default_auth(None).unwrap_err(),
         Error::Client(ClientErrorKind::MissingParam)
-    );
+    ));
 
     client.set_mock_read(&get_response_bytes_from_result(
         NativeResult::ListAuthenticators(operations::list_authenticators::Result {

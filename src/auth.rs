@@ -57,10 +57,10 @@ impl TryFrom<&Authentication> for RequestAuth {
                 let client = JWTClient::new(
                     &env::var("SPIFFE_ENDPOINT_SOCKET").map_err(|e| {
                         error!(
-                            "Can not read the SPIFFE_ENDPOINT_SOCKET environment variable ({}).",
+                            "Cannot read the SPIFFE_ENDPOINT_SOCKET environment variable ({}).",
                             e
                         );
-                        Error::Client(ClientErrorKind::Spiffe)
+                        Error::Client(ClientErrorKind::NoAuthenticator)
                     })?,
                     None,
                 );
@@ -68,7 +68,7 @@ impl TryFrom<&Authentication> for RequestAuth {
 
                 let result = client.fetch(audience, None).map_err(|e| {
                     error!("Error while fetching the JWT-SVID ({}).", e);
-                    Error::Client(ClientErrorKind::Spiffe)
+                    Error::Client(ClientErrorKind::Spiffe(e))
                 })?;
                 Ok(RequestAuth::new(result.svid().as_bytes().into()))
             }
@@ -84,6 +84,7 @@ impl PartialEq for Authentication {
             (Authentication::Direct(app_name), Authentication::Direct(other_app_name)) => {
                 app_name == other_app_name
             }
+            (Authentication::JwtSvid, Authentication::JwtSvid) => true,
             _ => false,
         }
     }

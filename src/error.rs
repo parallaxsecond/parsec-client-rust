@@ -6,7 +6,7 @@ use std::error;
 use std::fmt;
 
 /// Enum used to denote errors returned to the library user
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum Error {
     /// Errors originating in the service
     Service(ResponseStatus),
@@ -43,41 +43,12 @@ pub enum ClientErrorKind {
     /// Required parameter was not provided
     MissingParam,
     /// Error while using the SPIFFE Workload API
-    Spiffe,
+    Spiffe(spiffe::workload::Error),
 }
 
 impl From<ClientErrorKind> for Error {
     fn from(client_error: ClientErrorKind) -> Self {
         Error::Client(client_error)
-    }
-}
-
-impl PartialEq for ClientErrorKind {
-    fn eq(&self, other: &Self) -> bool {
-        match self {
-            ClientErrorKind::Interface(status) => {
-                if let ClientErrorKind::Interface(other_status) = other {
-                    other_status == status
-                } else {
-                    false
-                }
-            }
-            ClientErrorKind::Ipc(error) => {
-                if let ClientErrorKind::Ipc(other_error) = other {
-                    other_error.kind() == error.kind()
-                } else {
-                    false
-                }
-            }
-            ClientErrorKind::InvalidServiceResponseType => {
-                matches!(other, ClientErrorKind::InvalidServiceResponseType)
-            }
-            ClientErrorKind::InvalidProvider => matches!(other, ClientErrorKind::InvalidProvider),
-            ClientErrorKind::NoProvider => matches!(other, ClientErrorKind::NoProvider),
-            ClientErrorKind::NoAuthenticator => matches!(other, ClientErrorKind::NoAuthenticator),
-            ClientErrorKind::MissingParam => matches!(other, ClientErrorKind::MissingParam),
-            ClientErrorKind::Spiffe => matches!(other, ClientErrorKind::Spiffe),
-        }
     }
 }
 
@@ -96,7 +67,7 @@ impl fmt::Display for ClientErrorKind {
             ClientErrorKind::NoProvider => write!(f, "client is missing an implicit provider"),
             ClientErrorKind::NoAuthenticator => write!(f, "service is not reporting any authenticators or none of the reported ones are supported by the client"),
             ClientErrorKind::MissingParam => write!(f, "one of the `Option` parameters was required but was not provided"),
-            ClientErrorKind::Spiffe => write!(f, "error using the SPIFFE Workload API"),
+            ClientErrorKind::Spiffe(error) => error.fmt(f),
         }
     }
 }
