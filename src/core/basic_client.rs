@@ -258,6 +258,7 @@ impl BasicClient {
                 AuthType::UnixPeerCredentials => {
                     self.auth_data = Authentication::UnixPeerCredentials
                 }
+                #[cfg(feature = "spiffe-auth")]
                 AuthType::JwtSvid => self.auth_data = Authentication::JwtSvid,
                 auth => {
                     warn!(
