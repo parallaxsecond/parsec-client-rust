@@ -13,6 +13,7 @@ set -euf -o pipefail
 ################
 RUST_BACKTRACE=1 cargo build
 RUST_BACKTRACE=1 cargo build --features testing
+RUST_BACKTRACE=1 cargo build --no-default-features
 
 #################
 # Static checks #

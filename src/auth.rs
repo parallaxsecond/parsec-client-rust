@@ -1,7 +1,9 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 //! Client app authentication data
+use crate::error::{Error, Result};
 use parsec_interface::requests::{request::RequestAuth, AuthType};
+use std::convert::TryFrom;
 
 /// Authentication data used in Parsec requests
 #[derive(Clone, Debug)]
@@ -19,6 +21,11 @@ pub enum Authentication {
     /// Used for authentication via Peer Credentials provided by Unix
     /// operating systems for Domain Socket connections.
     UnixPeerCredentials,
+    /// Authentication using JWT SVID tokens. The will fetch its JWT-SVID and pass it in the
+    /// Authentication field. The socket endpoint is found through the SPIFFE_ENDPOINT_SOCKET
+    /// environment variable.
+    #[cfg(feature = "spiffe-auth")]
+    JwtSvid,
 }
 
 impl Authentication {
@@ -28,18 +35,48 @@ impl Authentication {
             Authentication::None => AuthType::NoAuth,
             Authentication::Direct(_) => AuthType::Direct,
             Authentication::UnixPeerCredentials => AuthType::UnixPeerCredentials,
+            #[cfg(feature = "spiffe-auth")]
+            Authentication::JwtSvid => AuthType::JwtSvid,
         }
     }
 }
 
-impl From<&Authentication> for RequestAuth {
-    fn from(data: &Authentication) -> Self {
+impl TryFrom<&Authentication> for RequestAuth {
+    type Error = Error;
+
+    fn try_from(data: &Authentication) -> Result<Self> {
         match data {
-            Authentication::None => RequestAuth::new(Vec::new()),
-            Authentication::Direct(name) => RequestAuth::new(name.bytes().collect()),
+            Authentication::None => Ok(RequestAuth::new(Vec::new())),
+            Authentication::Direct(name) => Ok(RequestAuth::new(name.bytes().collect())),
             Authentication::UnixPeerCredentials => {
                 let current_uid = users::get_current_uid();
-                RequestAuth::new(current_uid.to_le_bytes().to_vec())
+                Ok(RequestAuth::new(current_uid.to_le_bytes().to_vec()))
+            }
+            #[cfg(feature = "spiffe-auth")]
+            Authentication::JwtSvid => {
+                use crate::error::ClientErrorKind;
+                use log::error;
+                use spiffe::workload::jwt::JWTClient;
+                use std::env;
+
+                let client = JWTClient::new(
+                    &env::var("SPIFFE_ENDPOINT_SOCKET").map_err(|e| {
+                        error!(
+                            "Cannot read the SPIFFE_ENDPOINT_SOCKET environment variable ({}).",
+                            e
+                        );
+                        Error::Client(ClientErrorKind::NoAuthenticator)
+                    })?,
+                    None,
+                    None,
+                );
+                let audience = String::from("parsec");
+
+                let result = client.fetch(audience).map_err(|e| {
+                    error!("Error while fetching the JWT-SVID ({}).", e);
+                    Error::Client(ClientErrorKind::Spiffe(e))
+                })?;
+                Ok(RequestAuth::new(result.svid().as_bytes().into()))
             }
         }
     }
@@ -53,6 +90,8 @@ impl PartialEq for Authentication {
             (Authentication::Direct(app_name), Authentication::Direct(other_app_name)) => {
                 app_name == other_app_name
             }
+            #[cfg(feature = "spiffe-auth")]
+            (Authentication::JwtSvid, Authentication::JwtSvid) => true,
             _ => false,
         }
     }
