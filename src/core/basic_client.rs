@@ -5,9 +5,11 @@ use super::operation_client::OperationClient;
 use crate::auth::Authentication;
 use crate::error::{ClientErrorKind, Error, Result};
 use log::{info, warn};
+use parsec_interface::operations::delete_client::Operation as DeleteClient;
 use parsec_interface::operations::list_authenticators::{
     AuthenticatorInfo, Operation as ListAuthenticators,
 };
+use parsec_interface::operations::list_clients::Operation as ListClients;
 use parsec_interface::operations::list_keys::{KeyInfo, Operation as ListKeys};
 use parsec_interface::operations::list_opcodes::Operation as ListOpcodes;
 use parsec_interface::operations::list_providers::{Operation as ListProviders, ProviderInfo};
@@ -370,6 +372,39 @@ impl BasicClient {
         )?;
         if let NativeResult::ListKeys(res) = res {
             Ok(res.keys)
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Core Operation, Admin Operation]** Lists all clients currently having
+    /// data in the service.
+    pub fn list_clients(&self) -> Result<Vec<String>> {
+        let res = self.op_client.process_operation(
+            NativeOperation::ListClients(ListClients {}),
+            ProviderID::Core,
+            &self.auth_data,
+        )?;
+        if let NativeResult::ListClients(res) = res {
+            Ok(res.clients)
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Core Operation, Admin Operation]** Delete all data a client has in the service.
+    pub fn delete_client(&self, client: String) -> Result<()> {
+        let res = self.op_client.process_operation(
+            NativeOperation::DeleteClient(DeleteClient { client }),
+            ProviderID::Core,
+            &self.auth_data,
+        )?;
+        if let NativeResult::DeleteClient(_) = res {
+            Ok(())
         } else {
             // Should really not be reached given the checks we do, but it's not impossible if some
             // changes happen in the interface
