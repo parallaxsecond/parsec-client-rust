@@ -120,6 +120,42 @@ fn list_opcodes_test() {
 }
 
 #[test]
+fn list_clients_test() {
+    let mut client: TestBasicClient = Default::default();
+    let mut clients = Vec::new();
+    clients.push("toto".to_string());
+    clients.push("tata".to_string());
+    client.set_mock_read(&get_response_bytes_from_result(NativeResult::ListClients(
+        operations::list_clients::Result { clients },
+    )));
+    let clients = client.list_clients().expect("Failed to retrieve opcodes");
+
+    // Check response:
+    assert_eq!(clients.len(), 2);
+    assert!(clients.contains(&"toto".to_string()) && clients.contains(&"tata".to_string()));
+}
+
+#[test]
+fn delete_client_test() {
+    let mut client: TestBasicClient = Default::default();
+    client.set_mock_read(&get_response_bytes_from_result(NativeResult::DeleteClient(
+        operations::delete_client::Result {},
+    )));
+    let client_name = String::from("toto");
+    client
+        .delete_client(client_name.clone())
+        .expect("Failed to call destroy key");
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::DeleteClient(op) = op {
+        assert_eq!(op.client, client_name);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+}
+
+#[test]
 fn list_keys_test() {
     use parsec_interface::operations::psa_key_attributes::{
         Attributes, Lifetime, Policy, Type, UsageFlags,
