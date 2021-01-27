@@ -42,6 +42,9 @@ pub enum ClientErrorKind {
     NoAuthenticator,
     /// Required parameter was not provided
     MissingParam,
+    /// Error while using the SPIFFE Workload API
+    #[cfg(feature = "spiffe-auth")]
+    Spiffe(spiffe::workload::Error),
 }
 
 impl From<ClientErrorKind> for Error {
@@ -65,6 +68,8 @@ impl fmt::Display for ClientErrorKind {
             ClientErrorKind::NoProvider => write!(f, "client is missing an implicit provider"),
             ClientErrorKind::NoAuthenticator => write!(f, "service is not reporting any authenticators or none of the reported ones are supported by the client"),
             ClientErrorKind::MissingParam => write!(f, "one of the `Option` parameters was required but was not provided"),
+            #[cfg(feature = "spiffe-auth")]
+            ClientErrorKind::Spiffe(error) => error.fmt(f),
         }
     }
 }

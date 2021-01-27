@@ -19,10 +19,12 @@ log = "0.4.11"
 derivative = "2.1.1"
 zeroize = "1.1.0"
 users = "0.10.0"
+spiffe = { git = "https://github.com/hug-dev/rust-spiffe", branch = "refactor-jwt", optional = true }
 
 [dev-dependencies]
 mockstream = "0.0.3"
 
 [features]
-default = []
+default = ["spiffe-auth"]
+spiffe-auth = ["spiffe"]
 testing = ["parsec-interface/testing"]
