@@ -48,6 +48,9 @@ pub enum ClientErrorKind {
     InvalidSocketAddress,
     /// The socket URL is invalid
     InvalidSocketUrl,
+    /// Error while using the SPIFFE Workload API
+    #[cfg(feature = "spiffe-auth")]
+    Spiffe(spiffe::workload_api::client::ClientError),
 }
 
 impl From<ClientErrorKind> for Error {
@@ -80,6 +83,8 @@ impl fmt::Display for ClientErrorKind {
             ClientErrorKind::NotFound => write!(f, "one of the resources required in the operation was not found"),
             ClientErrorKind::InvalidSocketAddress => write!(f, "the socket address provided in the URL is not valid"),
             ClientErrorKind::InvalidSocketUrl => write!(f, "the socket URL is invalid"),
+            #[cfg(feature = "spiffe-auth")]
+            ClientErrorKind::Spiffe(error) => error.fmt(f),
         }
     }
 }
