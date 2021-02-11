@@ -377,6 +377,18 @@ impl BasicClient {
         }
     }
 
+    /// Get the key attributes.
+    ///
+    /// This is a convenience method that uses `list_keys` underneath.
+    pub fn key_attributes(&self, key_name: &str) -> Result<Attributes> {
+        Ok(self
+            .list_keys()?
+            .into_iter()
+            .find(|key_info| key_info.name == key_name)
+            .ok_or(crate::error::Error::Client(ClientErrorKind::NotFound))?
+            .attributes)
+    }
+
     /// **[Core Operation, Admin Operation]** Lists all clients currently having
     /// data in the service.
     pub fn list_clients(&self) -> Result<Vec<String>> {
