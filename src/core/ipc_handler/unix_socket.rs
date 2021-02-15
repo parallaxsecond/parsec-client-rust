@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 const DEFAULT_SOCKET_PATH: &str = "/run/parsec/parsec.sock";
-const DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
+const DEFAULT_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// IPC handler for Unix domain sockets
 #[derive(Debug, Clone)]

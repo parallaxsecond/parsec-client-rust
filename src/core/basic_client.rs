@@ -192,7 +192,8 @@ impl BasicClient {
     /// authentication choice
     ///
     /// This client will use the default configuration. That includes using a Protobuf converter
-    /// for message bodies and a Unix Domain Socket IPC handler.
+    /// for message bodies and a Unix Domain Socket IPC handler. The default timeout length is 60
+    /// seconds.
     ///
     /// # Errors
     ///
