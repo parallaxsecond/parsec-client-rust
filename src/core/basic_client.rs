@@ -202,7 +202,7 @@ impl BasicClient {
     /// [`set_default_provider`](#method.set_default_provider)
     pub fn new(app_name: Option<String>) -> Result<Self> {
         let mut client = BasicClient {
-            op_client: Default::default(),
+            op_client: OperationClient::new()?,
             auth_data: Authentication::None,
             implicit_provider: ProviderID::Core,
         };

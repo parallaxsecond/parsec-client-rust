@@ -44,11 +44,21 @@ pub enum ClientErrorKind {
     MissingParam,
     /// The requested resource was not found.
     NotFound,
+    /// The socket address provided is not valid
+    InvalidSocketAddress,
+    /// The socket URL is invalid
+    InvalidSocketUrl,
 }
 
 impl From<ClientErrorKind> for Error {
     fn from(client_error: ClientErrorKind) -> Self {
         Error::Client(client_error)
+    }
+}
+
+impl From<url::ParseError> for Error {
+    fn from(_: url::ParseError) -> Self {
+        Error::Client(ClientErrorKind::InvalidSocketUrl)
     }
 }
 
@@ -67,7 +77,9 @@ impl fmt::Display for ClientErrorKind {
             ClientErrorKind::NoProvider => write!(f, "client is missing an implicit provider"),
             ClientErrorKind::NoAuthenticator => write!(f, "service is not reporting any authenticators or none of the reported ones are supported by the client"),
             ClientErrorKind::MissingParam => write!(f, "one of the `Option` parameters was required but was not provided"),
-            ClientErrorKind::NotFound => write!(f, "one of the resources required in the operation was not found")
+            ClientErrorKind::NotFound => write!(f, "one of the resources required in the operation was not found"),
+            ClientErrorKind::InvalidSocketAddress => write!(f, "the socket address provided in the URL is not valid"),
+            ClientErrorKind::InvalidSocketUrl => write!(f, "the socket URL is invalid"),
         }
     }
 }
