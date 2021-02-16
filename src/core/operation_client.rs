@@ -40,8 +40,11 @@ impl OperationClient {
     /// seconds on reads and writes on the socket. It uses the version 1.0 wire protocol
     /// to form requests, the direct authentication method and protobuf format as
     /// content type.
-    pub fn new() -> OperationClient {
-        Default::default()
+    pub fn new() -> Result<OperationClient> {
+        Ok(OperationClient {
+            request_client: RequestClient::new()?,
+            ..Default::default()
+        })
     }
 
     fn operation_to_request(

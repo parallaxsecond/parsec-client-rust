@@ -1,10 +1,11 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 //! Request-level client
-use super::ipc_handler::{unix_socket, Connect};
+use super::ipc_handler::{self, unix_socket, Connect};
 use crate::error::{ClientErrorKind, Result};
 use derivative::Derivative;
 use parsec_interface::requests::{Request, Response};
+use std::env;
 use std::time::Duration;
 
 const DEFAULT_MAX_BODY_SIZE: usize = usize::max_value();
@@ -29,6 +30,18 @@ pub struct RequestClient {
 }
 
 impl RequestClient {
+    /// Creates a new `RequestClient`, bootstrapping the socket
+    /// location.
+    pub fn new() -> Result<Self> {
+        Ok(RequestClient {
+            ipc_handler: ipc_handler::connector_from_url(url::Url::parse(
+                &env::var("PARSEC_SERVICE_ENDPOINT")
+                    .unwrap_or(format!("unix:{}", unix_socket::DEFAULT_SOCKET_PATH)),
+            )?)?,
+            max_body_size: DEFAULT_MAX_BODY_SIZE,
+        })
+    }
+
     /// Send a request and get a response.
     pub fn process_request(&self, request: Request) -> Result<Response> {
         // Try to connect once, wait for a timeout until trying again.
