@@ -4,7 +4,7 @@
 use super::operation_client::OperationClient;
 use crate::auth::Authentication;
 use crate::error::{ClientErrorKind, Error, Result};
-use log::{info, warn};
+use log::{debug, warn};
 use parsec_interface::operations::delete_client::Operation as DeleteClient;
 use parsec_interface::operations::list_authenticators::{
     AuthenticatorInfo, Operation as ListAuthenticators,
@@ -208,7 +208,7 @@ impl BasicClient {
         };
         client.set_default_provider()?;
         client.set_default_auth(app_name)?;
-        info!("Parsec BasicClient created with implicit provider \"{}\" and authentication data \"{:?}\"", client.implicit_provider(), client.auth_data());
+        debug!("Parsec BasicClient created with implicit provider \"{}\" and authentication data \"{:?}\"", client.implicit_provider(), client.auth_data());
         Ok(client)
     }
 
