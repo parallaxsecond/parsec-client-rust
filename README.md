@@ -9,6 +9,11 @@ The low-level functionality that this library uses for IPC is implemented in the
 
 Check out the `spiffe` branch for JWT SVID authentication feature.
 
+## Locating the Parsec endpoint
+
+The Rust client follows the [service discovery](https://parallaxsecond.github.io/parsec-book/parsec_client/api_overview.html#service-discovery) policy
+to find the Parsec endpoint.
+
 ## License
 
 The software is provided under Apache-2.0. Contributions to this project are accepted under the same license.
