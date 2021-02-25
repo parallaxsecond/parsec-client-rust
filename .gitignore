@@ -1,3 +1,4 @@
 /target
 *patch
 Cargo.lock
+cobertura.xml
