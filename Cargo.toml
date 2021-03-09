@@ -1,8 +1,7 @@
 [package]
 name = "parsec-client"
 version = "0.12.0"
-authors = ["Ionut Mihalcea <ionut.mihalcea@arm.com>",
-           "Hugues de Valon <hugues.devalon@arm.com>"]
+authors = ["Contributors to the Parsec project"]
 description = "Parsec Client library for the Rust ecosystem"
 license = "Apache-2.0"
 repository = "https://github.com/parallaxsecond/parsec-client-rust"
@@ -13,7 +12,7 @@ edition = "2018"
 documentation = "https://docs.rs/crate/parsec-client"
 
 [dependencies]
-parsec-interface = { git = "https://github.com/parallaxsecond/parsec-interface-rs", rev = "ccff61b242756d07ed4b140966979e44cb7c5cf0" }
+parsec-interface = { git = "https://github.com/parallaxsecond/parsec-interface-rs", rev = "b7953ce69e27380df441d99749d4714108967235" }
 num = "0.3.0"
 log = "0.4.11"
 derivative = "2.1.1"
