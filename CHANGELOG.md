@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.12.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.12.0) (2021-03-18)
+
+[Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.11.0...0.12.0)
+
+**Implemented enhancements:**
+
+- Implement component bootstrapping [\#52](https://github.com/parallaxsecond/parsec-client-rust/issues/52)
+- Resolve service endpoint from a URI environment variable [\#37](https://github.com/parallaxsecond/parsec-client-rust/issues/37)
+- Add code coverage checking to the nightly run [\#77](https://github.com/parallaxsecond/parsec-client-rust/pull/77) ([ionut-arm](https://github.com/ionut-arm))
+- Bootstrap socket location from env variable [\#73](https://github.com/parallaxsecond/parsec-client-rust/pull/73) ([ionut-arm](https://github.com/ionut-arm))
+- Increase the default timeout to 60 seconds [\#72](https://github.com/parallaxsecond/parsec-client-rust/pull/72) ([hug-dev](https://github.com/hug-dev))
+- Add changelog file [\#60](https://github.com/parallaxsecond/parsec-client-rust/pull/60) ([ionut-arm](https://github.com/ionut-arm))
+
+**Closed issues:**
+
+- Add support for ListClients and DeleteClient [\#66](https://github.com/parallaxsecond/parsec-client-rust/issues/66)
+- Add a JWT-SVID authentication data [\#55](https://github.com/parallaxsecond/parsec-client-rust/issues/55)
+
+**Merged pull requests:**
+
+- Prepare for version 0.12.0 [\#79](https://github.com/parallaxsecond/parsec-client-rust/pull/79) ([hug-dev](https://github.com/hug-dev))
+- Update the interface to latest master [\#78](https://github.com/parallaxsecond/parsec-client-rust/pull/78) ([hug-dev](https://github.com/hug-dev))
+- Update hash to latest interface [\#76](https://github.com/parallaxsecond/parsec-client-rust/pull/76) ([hug-dev](https://github.com/hug-dev))
+- Move a log message from info to debug [\#75](https://github.com/parallaxsecond/parsec-client-rust/pull/75) ([hug-dev](https://github.com/hug-dev))
+- Add documentation about the endpoint env. var. [\#74](https://github.com/parallaxsecond/parsec-client-rust/pull/74) ([hug-dev](https://github.com/hug-dev))
+- Update interface dependency [\#71](https://github.com/parallaxsecond/parsec-client-rust/pull/71) ([ionut-arm](https://github.com/ionut-arm))
+- Remove spiffe-based feature from master [\#68](https://github.com/parallaxsecond/parsec-client-rust/pull/68) ([hug-dev](https://github.com/hug-dev))
+- Add ListClients and DeleteClient operations [\#67](https://github.com/parallaxsecond/parsec-client-rust/pull/67) ([hug-dev](https://github.com/hug-dev))
+- Disable Travis CI build [\#65](https://github.com/parallaxsecond/parsec-client-rust/pull/65) ([ionut-arm](https://github.com/ionut-arm))
+- Consume parsec-interface at 0.22.0 and bump crate to 0.12.0 [\#63](https://github.com/parallaxsecond/parsec-client-rust/pull/63) ([paulhowardarm](https://github.com/paulhowardarm))
+- Add a note about JWT-SVID Workload Endpoint [\#62](https://github.com/parallaxsecond/parsec-client-rust/pull/62) ([hug-dev](https://github.com/hug-dev))
+- Add a JWT-SVID authentication method [\#61](https://github.com/parallaxsecond/parsec-client-rust/pull/61) ([hug-dev](https://github.com/hug-dev))
+
 ## [0.11.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.11.0) (2020-10-20)
 
 [Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.10.0...0.11.0)
