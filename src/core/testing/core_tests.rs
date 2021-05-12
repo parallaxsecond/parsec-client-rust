@@ -13,7 +13,7 @@ use parsec_interface::operations::psa_key_attributes::*;
 use parsec_interface::operations::Convert;
 use parsec_interface::operations::{NativeOperation, NativeResult};
 use parsec_interface::operations_protobuf::ProtobufConverter;
-use parsec_interface::requests::ProviderID;
+use parsec_interface::requests::ProviderId;
 use parsec_interface::requests::Response;
 use parsec_interface::requests::ResponseStatus;
 use parsec_interface::requests::{request::RequestHeader, Request};
@@ -25,7 +25,7 @@ use zeroize::Zeroizing;
 
 const PROTOBUF_CONVERTER: ProtobufConverter = ProtobufConverter {};
 const REQ_HEADER: RequestHeader = RequestHeader {
-    provider: ProviderID::Core,
+    provider: ProviderId::Core,
     session: 0,
     content_type: BodyType::Protobuf,
     accept_type: BodyType::Protobuf,
@@ -75,16 +75,15 @@ fn ping_test() {
 #[test]
 fn list_provider_test() {
     let mut client: TestBasicClient = Default::default();
-    let mut provider_info = Vec::new();
-    provider_info.push(ProviderInfo {
+    let provider_info = vec![ProviderInfo {
         uuid: Uuid::nil(),
         description: String::from("Some empty provider"),
         vendor: String::from("Arm Ltd."),
         version_maj: 1,
         version_min: 0,
         version_rev: 0,
-        id: ProviderID::Core,
-    });
+        id: ProviderId::Core,
+    }];
     client.set_mock_read(&get_response_bytes_from_result(
         NativeResult::ListProviders(operations::list_providers::Result {
             providers: provider_info,
@@ -109,7 +108,7 @@ fn list_opcodes_test() {
         operations::list_opcodes::Result { opcodes },
     )));
     let opcodes = client
-        .list_opcodes(ProviderID::MbedCrypto)
+        .list_opcodes(ProviderId::MbedCrypto)
         .expect("Failed to retrieve opcodes");
     // Check request:
     // ListOpcodes request is empty so no checking to be done
@@ -122,9 +121,7 @@ fn list_opcodes_test() {
 #[test]
 fn list_clients_test() {
     let mut client: TestBasicClient = Default::default();
-    let mut clients = Vec::new();
-    clients.push("toto".to_string());
-    clients.push("tata".to_string());
+    let clients = vec!["toto".to_string(), "tata".to_string()];
     client.set_mock_read(&get_response_bytes_from_result(NativeResult::ListClients(
         operations::list_clients::Result { clients },
     )));
@@ -162,9 +159,8 @@ fn list_keys_test() {
     };
 
     let mut client: TestBasicClient = Default::default();
-    let mut key_info = Vec::new();
-    key_info.push(KeyInfo {
-        provider_id: ProviderID::MbedCrypto,
+    let key_info = vec![KeyInfo {
+        provider_id: ProviderId::MbedCrypto,
         name: String::from("Foo"),
         attributes: Attributes {
             lifetime: Lifetime::Persistent,
@@ -190,7 +186,7 @@ fn list_keys_test() {
                 ),
             },
         },
-    });
+    }];
 
     client.set_mock_read(&get_response_bytes_from_result(NativeResult::ListKeys(
         operations::list_keys::Result { keys: key_info },
@@ -203,14 +199,14 @@ fn list_keys_test() {
     // Check response:
     assert_eq!(keys.len(), 1);
     assert_eq!(keys[0].name, "Foo");
-    assert_eq!(keys[0].provider_id, ProviderID::MbedCrypto);
+    assert_eq!(keys[0].provider_id, ProviderId::MbedCrypto);
 }
 
 #[test]
 fn core_provider_for_crypto_test() {
     let mut client: TestBasicClient = Default::default();
 
-    client.set_implicit_provider(ProviderID::Core);
+    client.set_implicit_provider(ProviderId::Core);
     let res = client
         .psa_destroy_key(String::from("random key"))
         .expect_err("Expected a failure!!");

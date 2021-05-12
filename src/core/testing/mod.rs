@@ -6,7 +6,7 @@ use super::ipc_handler::{Connect, ReadWrite};
 use crate::auth::Authentication;
 use crate::error::Result;
 use mockstream::{FailingMockStream, SyncMockStream};
-use parsec_interface::requests::ProviderID;
+use parsec_interface::requests::ProviderId;
 use std::ops::{Deref, DerefMut};
 use std::time::Duration;
 
@@ -68,7 +68,7 @@ impl Default for TestBasicClient {
         let core_client = BasicClient {
             op_client: Default::default(),
             auth_data: Authentication::Direct(String::from(DEFAULT_APP_NAME)),
-            implicit_provider: ProviderID::Pkcs11,
+            implicit_provider: ProviderId::Pkcs11,
         };
         let mut client = TestBasicClient {
             core_client,
