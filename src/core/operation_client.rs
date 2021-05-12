@@ -10,7 +10,7 @@ use derivative::Derivative;
 use parsec_interface::operations::{Convert, NativeOperation, NativeResult};
 use parsec_interface::operations_protobuf::ProtobufConverter;
 use parsec_interface::requests::{
-    request::RequestHeader, Opcode, ProviderID, Request, Response, ResponseStatus,
+    request::RequestHeader, Opcode, ProviderId, Request, Response, ResponseStatus,
 };
 use std::convert::TryInto;
 
@@ -50,7 +50,7 @@ impl OperationClient {
     fn operation_to_request(
         &self,
         operation: NativeOperation,
-        provider: ProviderID,
+        provider: ProviderId,
         auth: &Authentication,
     ) -> Result<Request> {
         let opcode = operation.opcode();
@@ -103,7 +103,7 @@ impl OperationClient {
     pub fn process_operation(
         &self,
         operation: NativeOperation,
-        provider: ProviderID,
+        provider: ProviderId,
         auth: &Authentication,
     ) -> Result<NativeResult> {
         let req_opcode = operation.opcode();

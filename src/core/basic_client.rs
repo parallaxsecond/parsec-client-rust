@@ -35,7 +35,7 @@ use parsec_interface::operations::psa_sign_hash::Operation as PsaSignHash;
 use parsec_interface::operations::psa_verify_hash::Operation as PsaVerifyHash;
 use parsec_interface::operations::{NativeOperation, NativeResult};
 use parsec_interface::requests::AuthType;
-use parsec_interface::requests::{Opcode, ProviderID};
+use parsec_interface::requests::{Opcode, ProviderId};
 use parsec_interface::secrecy::{ExposeSecret, Secret};
 use std::collections::HashSet;
 use zeroize::Zeroizing;
@@ -69,7 +69,7 @@ use zeroize::Zeroizing;
 ///```no_run
 ///# use parsec_client::auth::Authentication;
 ///# use parsec_client::BasicClient;
-///# use parsec_client::core::interface::requests::ProviderID;
+///# use parsec_client::core::interface::requests::ProviderId;
 ///# let client: BasicClient = BasicClient::new(Some(String::from("app-name"))).unwrap();
 ///let res = client.ping();
 ///
@@ -91,7 +91,7 @@ use zeroize::Zeroizing;
 ///```no_run
 ///# use parsec_client::auth::Authentication;
 ///# use parsec_client::BasicClient;
-///# use parsec_client::core::interface::requests::ProviderID;
+///# use parsec_client::core::interface::requests::ProviderId;
 ///# let client: BasicClient = BasicClient::new(Some(String::from("app-name"))).unwrap();
 ///use parsec_interface::operations::list_providers::Uuid;
 ///
@@ -113,11 +113,11 @@ use zeroize::Zeroizing;
 ///```no_run
 ///# use parsec_client::auth::Authentication;
 ///# use parsec_client::BasicClient;
-///# use parsec_client::core::interface::requests::ProviderID;
+///# use parsec_client::core::interface::requests::ProviderId;
 ///# let mut client: BasicClient = BasicClient::new(Some(String::from("app-name"))).unwrap();
 ///use parsec_client::core::interface::requests::Opcode;
 ///
-///let desired_provider = ProviderID::Pkcs11;
+///let desired_provider = ProviderId::Pkcs11;
 ///let provider_opcodes = client
 ///    .list_opcodes(desired_provider)
 ///    .expect("Failed to list opcodes");
@@ -134,7 +134,7 @@ use zeroize::Zeroizing;
 ///```no_run
 ///# use parsec_client::auth::Authentication;
 ///# use parsec_client::BasicClient;
-///# use parsec_client::core::interface::requests::ProviderID;
+///# use parsec_client::core::interface::requests::ProviderId;
 ///# let client: BasicClient = BasicClient::new(Some(String::from("app-name"))).unwrap();
 ///use parsec_client::core::interface::operations::psa_algorithm::{Algorithm, AsymmetricSignature, Hash};
 ///use parsec_client::core::interface::operations::psa_key_attributes::{Attributes, Lifetime, Policy, Type, UsageFlags};
@@ -178,7 +178,7 @@ use zeroize::Zeroizing;
 pub struct BasicClient {
     pub(crate) op_client: OperationClient,
     pub(crate) auth_data: Authentication,
-    pub(crate) implicit_provider: ProviderID,
+    pub(crate) implicit_provider: ProviderId,
 }
 
 /// Main client functionality.
@@ -204,7 +204,7 @@ impl BasicClient {
         let mut client = BasicClient {
             op_client: OperationClient::new()?,
             auth_data: Authentication::None,
-            implicit_provider: ProviderID::Core,
+            implicit_provider: ProviderId::Core,
         };
         client.set_default_provider()?;
         client.set_default_auth(app_name)?;
@@ -229,7 +229,7 @@ impl BasicClient {
         BasicClient {
             op_client: Default::default(),
             auth_data: Authentication::None,
-            implicit_provider: ProviderID::Core,
+            implicit_provider: ProviderId::Core,
         }
     }
 
@@ -302,22 +302,22 @@ impl BasicClient {
     }
 
     /// Set the provider that the client will be implicitly working with.
-    pub fn set_implicit_provider(&mut self, provider: ProviderID) {
+    pub fn set_implicit_provider(&mut self, provider: ProviderId) {
         self.implicit_provider = provider;
     }
 
     /// Retrieve client's implicit provider.
-    pub fn implicit_provider(&self) -> ProviderID {
+    pub fn implicit_provider(&self) -> ProviderId {
         self.implicit_provider
     }
 
     /// **[Core Operation]** List the opcodes supported by the specified provider.
-    pub fn list_opcodes(&self, provider: ProviderID) -> Result<HashSet<Opcode>> {
+    pub fn list_opcodes(&self, provider: ProviderId) -> Result<HashSet<Opcode>> {
         let res = self.op_client.process_operation(
             NativeOperation::ListOpcodes(ListOpcodes {
                 provider_id: provider,
             }),
-            ProviderID::Core,
+            ProviderId::Core,
             &self.auth_data,
         )?;
 
@@ -334,7 +334,7 @@ impl BasicClient {
     pub fn list_providers(&self) -> Result<Vec<ProviderInfo>> {
         let res = self.op_client.process_operation(
             NativeOperation::ListProviders(ListProviders {}),
-            ProviderID::Core,
+            ProviderId::Core,
             &self.auth_data,
         )?;
         if let NativeResult::ListProviders(res) = res {
@@ -350,7 +350,7 @@ impl BasicClient {
     pub fn list_authenticators(&self) -> Result<Vec<AuthenticatorInfo>> {
         let res = self.op_client.process_operation(
             NativeOperation::ListAuthenticators(ListAuthenticators {}),
-            ProviderID::Core,
+            ProviderId::Core,
             &self.auth_data,
         )?;
         if let NativeResult::ListAuthenticators(res) = res {
@@ -366,7 +366,7 @@ impl BasicClient {
     pub fn list_keys(&self) -> Result<Vec<KeyInfo>> {
         let res = self.op_client.process_operation(
             NativeOperation::ListKeys(ListKeys {}),
-            ProviderID::Core,
+            ProviderId::Core,
             &self.auth_data,
         )?;
         if let NativeResult::ListKeys(res) = res {
@@ -395,7 +395,7 @@ impl BasicClient {
     pub fn list_clients(&self) -> Result<Vec<String>> {
         let res = self.op_client.process_operation(
             NativeOperation::ListClients(ListClients {}),
-            ProviderID::Core,
+            ProviderId::Core,
             &self.auth_data,
         )?;
         if let NativeResult::ListClients(res) = res {
@@ -411,7 +411,7 @@ impl BasicClient {
     pub fn delete_client(&self, client: String) -> Result<()> {
         let res = self.op_client.process_operation(
             NativeOperation::DeleteClient(DeleteClient { client }),
-            ProviderID::Core,
+            ProviderId::Core,
             &self.auth_data,
         )?;
         if let NativeResult::DeleteClient(_) = res {
@@ -431,7 +431,7 @@ impl BasicClient {
     pub fn ping(&self) -> Result<(u8, u8)> {
         let res = self.op_client.process_operation(
             NativeOperation::Ping(Ping {}),
-            ProviderID::Core,
+            ProviderId::Core,
             &Authentication::None,
         )?;
 
@@ -460,7 +460,7 @@ impl BasicClient {
     /// If this method returns an error, no key will have been generated and
     /// the name used will still be available for another key.
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -490,7 +490,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -530,7 +530,7 @@ impl BasicClient {
     /// If this method returns an error, no key will have been imported and the
     /// name used will still be available for another key.
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -568,7 +568,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -602,7 +602,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -641,7 +641,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -690,7 +690,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -736,7 +736,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -788,7 +788,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -833,7 +833,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -866,7 +866,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -901,7 +901,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -954,7 +954,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -1005,7 +1005,7 @@ impl BasicClient {
     ///
     /// # Errors
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -1044,7 +1044,7 @@ impl BasicClient {
     ///
     /// If this method returns an error, no bytes will have been generated.
     ///
-    /// If the implicit client provider is `ProviderID::Core`, a client error
+    /// If the implicit client provider is `ProviderId::Core`, a client error
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
@@ -1069,9 +1069,9 @@ impl BasicClient {
         }
     }
 
-    fn can_provide_crypto(&self) -> Result<ProviderID> {
+    fn can_provide_crypto(&self) -> Result<ProviderId> {
         match self.implicit_provider {
-            ProviderID::Core => Err(Error::Client(ClientErrorKind::InvalidProvider)),
+            ProviderId::Core => Err(Error::Client(ClientErrorKind::InvalidProvider)),
             crypto_provider => Ok(crypto_provider),
         }
     }
