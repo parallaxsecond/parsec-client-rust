@@ -800,10 +800,7 @@ impl BasicClient {
         ciphertext: &[u8],
         salt: Option<&[u8]>,
     ) -> Result<Vec<u8>> {
-        let salt = match salt {
-            Some(salt) => Some(Zeroizing::new(salt.to_vec())),
-            None => None,
-        };
+        let salt = salt.map(|salt| Zeroizing::new(salt.to_vec()));
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaAsymDecrypt {
