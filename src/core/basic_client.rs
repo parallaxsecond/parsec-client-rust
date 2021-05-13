@@ -32,7 +32,9 @@ use parsec_interface::operations::psa_import_key::Operation as PsaImportKey;
 use parsec_interface::operations::psa_key_attributes::Attributes;
 use parsec_interface::operations::psa_raw_key_agreement::Operation as PsaRawKeyAgreement;
 use parsec_interface::operations::psa_sign_hash::Operation as PsaSignHash;
+use parsec_interface::operations::psa_sign_message::Operation as PsaSignMessage;
 use parsec_interface::operations::psa_verify_hash::Operation as PsaVerifyHash;
+use parsec_interface::operations::psa_verify_message::Operation as PsaVerifyMessage;
 use parsec_interface::operations::{NativeOperation, NativeResult};
 use parsec_interface::requests::AuthType;
 use parsec_interface::requests::{Opcode, ProviderId};
@@ -715,6 +717,95 @@ impl BasicClient {
 
         let _ = self.op_client.process_operation(
             NativeOperation::PsaVerifyHash(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+
+        Ok(())
+    }
+
+    /// **[Cryptographic Operation]** Create an asymmetric signature on a message.
+    ///
+    /// The key intended for signing **must** have its `sign_message` flag set
+    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
+    ///
+    /// The signature will be created with the algorithm defined in
+    /// `sign_algorithm`, but only after checking that the key policy
+    /// and type conform with it.
+    ///
+    /// # Errors
+    ///
+    /// If the implicit client provider is `ProviderId::Core`, a client error
+    /// of `InvalidProvider` type is returned.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_sign_message.html#specific-response-status-codes).
+    pub fn psa_sign_message(
+        &self,
+        key_name: String,
+        msg: &[u8],
+        sign_algorithm: AsymmetricSignature,
+    ) -> Result<Vec<u8>> {
+        let message = Zeroizing::new(msg.to_vec());
+        let crypto_provider = self.can_provide_crypto()?;
+
+        let op = PsaSignMessage {
+            key_name,
+            alg: sign_algorithm,
+            message,
+        };
+
+        let res = self.op_client.process_operation(
+            NativeOperation::PsaSignMessage(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+
+        if let NativeResult::PsaSignMessage(res) = res {
+            Ok(res.signature.to_vec())
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Cryptographic Operation]** Verify an existing asymmetric signature over a message.
+    ///
+    /// The key intended for signing **must** have its `verify_message` flag set
+    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
+    ///
+    /// The signature will be verifyied with the algorithm defined in
+    /// `sign_algorithm`, but only after checking that the key policy
+    /// and type conform with it.
+    ///
+    /// # Errors
+    ///
+    /// If the implicit client provider is `ProviderId::Core`, a client error
+    /// of `InvalidProvider` type is returned.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_verify_message.html#specific-response-status-codes).
+    pub fn psa_verify_message(
+        &self,
+        key_name: String,
+        msg: &[u8],
+        sign_algorithm: AsymmetricSignature,
+        signature: &[u8],
+    ) -> Result<()> {
+        let message = Zeroizing::new(msg.to_vec());
+        let signature = Zeroizing::new(signature.to_vec());
+        let crypto_provider = self.can_provide_crypto()?;
+
+        let op = PsaVerifyMessage {
+            key_name,
+            alg: sign_algorithm,
+            message,
+            signature,
+        };
+
+        let _ = self.op_client.process_operation(
+            NativeOperation::PsaVerifyMessage(op),
             crypto_provider,
             &self.auth_data,
         )?;
