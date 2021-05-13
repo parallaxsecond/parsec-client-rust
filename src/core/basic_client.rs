@@ -726,7 +726,7 @@ impl BasicClient {
 
     /// **[Cryptographic Operation]** Create an asymmetric signature on a message.
     ///
-    /// The key intended for signing **must** have its `sign_hash` flag set
+    /// The key intended for signing **must** have its `sign_message` flag set
     /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
     ///
     /// The signature will be created with the algorithm defined in
@@ -739,7 +739,7 @@ impl BasicClient {
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
-    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_sign_hash.html#specific-response-status-codes).
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_sign_message.html#specific-response-status-codes).
     pub fn psa_sign_message(
         &self,
         key_name: String,
@@ -772,7 +772,7 @@ impl BasicClient {
 
     /// **[Cryptographic Operation]** Verify an existing asymmetric signature over a message.
     ///
-    /// The key intended for signing **must** have its `verify_hash` flag set
+    /// The key intended for signing **must** have its `verify_message` flag set
     /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
     ///
     /// The signature will be verifyied with the algorithm defined in
@@ -785,7 +785,7 @@ impl BasicClient {
     /// of `InvalidProvider` type is returned.
     ///
     /// See the operation-specific response codes returned by the service
-    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_verify_hash.html#specific-response-status-codes).
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_verify_message.html#specific-response-status-codes).
     pub fn psa_verify_message(
         &self,
         key_name: String,
