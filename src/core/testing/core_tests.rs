@@ -481,6 +481,72 @@ fn verify_hash_test() {
 }
 
 #[test]
+fn psa_sign_message_test() {
+    let mut client: TestBasicClient = Default::default();
+    let msg = vec![0x77_u8; 100];
+    let key_name = String::from("key_name");
+    let sign_algorithm = AsymmetricSignature::Ecdsa {
+        hash_alg: Hash::Sha256.into(),
+    };
+    let signature = vec![0x33_u8; 128];
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::PsaSignMessage(operations::psa_sign_message::Result {
+            signature: signature.clone().into(),
+        }),
+    ));
+
+    // Check response:
+    assert_eq!(
+        client
+            .psa_sign_message(key_name.clone(), &msg, sign_algorithm)
+            .expect("Failed to sign message"),
+        signature
+    );
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::PsaSignMessage(op) = op {
+        assert_eq!(op.key_name, key_name);
+        assert_eq!(op.message.to_vec(), msg);
+        assert_eq!(op.alg, sign_algorithm);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+}
+
+#[test]
+fn verify_message_test() {
+    let mut client: TestBasicClient = Default::default();
+    let msg = vec![0x77_u8; 100];
+    let key_name = String::from("key_name");
+    let sign_algorithm = AsymmetricSignature::Ecdsa {
+        hash_alg: Hash::Sha256.into(),
+    };
+    let signature = vec![0x33_u8; 128];
+    client.set_mock_read(&get_response_bytes_from_result(
+        NativeResult::PsaVerifyMessage(operations::psa_verify_message::Result {}),
+    ));
+
+    client
+        .psa_verify_message(key_name.clone(), &msg, sign_algorithm, &signature)
+        .expect("Failed to sign hash");
+
+    // Check request:
+    let op = get_operation_from_req_bytes(client.get_mock_write());
+    if let NativeOperation::PsaVerifyMessage(op) = op {
+        assert_eq!(op.key_name, key_name);
+        assert_eq!(op.message.to_vec(), msg);
+        assert_eq!(op.alg, sign_algorithm);
+        assert_eq!(op.signature.to_vec(), signature);
+    } else {
+        panic!("Got wrong operation type: {:?}", op);
+    }
+
+    // Check response:
+    // VerifyMessage response is empty so no checking to be done
+}
+
+#[test]
 fn asymmetric_encrypt_test() {
     let mut client: TestBasicClient = Default::default();
     let plaintext = vec![0x77_u8; 32];
