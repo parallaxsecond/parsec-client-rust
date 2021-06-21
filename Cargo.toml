@@ -19,10 +19,12 @@ derivative = "2.1.1"
 zeroize = "1.1.0"
 users = "0.10.0"
 url = "2.2.0"
+spiffe = { version = "0.1.1", optional = true }
 
 [dev-dependencies]
 mockstream = "0.0.3"
 
 [features]
 default = []
+spiffe-auth = ["spiffe"]
 testing = ["parsec-interface/testing"]
