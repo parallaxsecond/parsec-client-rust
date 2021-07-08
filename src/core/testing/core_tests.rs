@@ -208,7 +208,7 @@ fn core_provider_for_crypto_test() {
 
     client.set_implicit_provider(ProviderId::Core);
     let res = client
-        .psa_destroy_key(String::from("random key"))
+        .psa_destroy_key("random key")
         .expect_err("Expected a failure!!");
 
     assert!(matches!(
@@ -246,7 +246,7 @@ fn psa_generate_key_test() {
     };
 
     client
-        .psa_generate_key(key_name.clone(), key_attrs)
+        .psa_generate_key(&key_name, key_attrs)
         .expect("failed to generate key");
 
     // Check request:
@@ -270,7 +270,7 @@ fn psa_destroy_key_test() {
     ));
     let key_name = String::from("key-name");
     client
-        .psa_destroy_key(key_name.clone())
+        .psa_destroy_key(&key_name)
         .expect("Failed to call destroy key");
 
     // Check request:
@@ -314,7 +314,7 @@ fn psa_import_key_test() {
     };
     let key_data = vec![0xff_u8; 128];
     client
-        .psa_import_key(key_name.clone(), &key_data, key_attrs)
+        .psa_import_key(&key_name, &key_data, key_attrs)
         .unwrap();
 
     // Check request:
@@ -345,7 +345,7 @@ fn psa_export_public_key_test() {
     // Check response:
     assert_eq!(
         client
-            .psa_export_public_key(key_name.clone())
+            .psa_export_public_key(&key_name)
             .expect("Failed to export public key"),
         key_data
     );
@@ -373,7 +373,7 @@ fn psa_export_key_test() {
     // Check response:
     assert_eq!(
         client
-            .psa_export_key(key_name.clone())
+            .psa_export_key(&key_name)
             .expect("Failed to export key"),
         key_data
     );
@@ -405,7 +405,7 @@ fn psa_sign_hash_test() {
     // Check response:
     assert_eq!(
         client
-            .psa_sign_hash(key_name.clone(), &hash, sign_algorithm)
+            .psa_sign_hash(&key_name, &hash, sign_algorithm)
             .expect("Failed to sign hash"),
         signature
     );
@@ -462,7 +462,7 @@ fn verify_hash_test() {
     ));
 
     client
-        .psa_verify_hash(key_name.clone(), &hash, sign_algorithm, &signature)
+        .psa_verify_hash(&key_name, &hash, sign_algorithm, &signature)
         .expect("Failed to sign hash");
 
     // Check request:
@@ -498,7 +498,7 @@ fn psa_sign_message_test() {
     // Check response:
     assert_eq!(
         client
-            .psa_sign_message(key_name.clone(), &msg, sign_algorithm)
+            .psa_sign_message(&key_name, &msg, sign_algorithm)
             .expect("Failed to sign message"),
         signature
     );
@@ -528,7 +528,7 @@ fn verify_message_test() {
     ));
 
     client
-        .psa_verify_message(key_name.clone(), &msg, sign_algorithm, &signature)
+        .psa_verify_message(&key_name, &msg, sign_algorithm, &signature)
         .expect("Failed to sign hash");
 
     // Check request:
@@ -562,7 +562,7 @@ fn asymmetric_encrypt_test() {
     // Check response:
     assert_eq!(
         client
-            .psa_asymmetric_encrypt(key_name.clone(), encrypt_algorithm, &plaintext, None)
+            .psa_asymmetric_encrypt(&key_name, encrypt_algorithm, &plaintext, None)
             .expect("Failed to encrypt message"),
         ciphertext
     );
@@ -595,7 +595,7 @@ fn asymmetric_decrypt_test() {
     // Check response
     assert_eq!(
         client
-            .psa_asymmetric_decrypt(key_name.clone(), encrypt_algorithm, &ciphertext, None)
+            .psa_asymmetric_decrypt(&key_name, encrypt_algorithm, &ciphertext, None)
             .expect("Failed to decrypt message"),
         plaintext
     );
@@ -631,7 +631,7 @@ fn aead_encrypt_test() {
     assert_eq!(
         client
             .psa_aead_encrypt(
-                key_name.clone(),
+                &key_name,
                 encrypt_algorithm,
                 &nonce,
                 &additional_data,
@@ -673,7 +673,7 @@ fn aead_decrypt_test() {
     assert_eq!(
         client
             .psa_aead_decrypt(
-                key_name.clone(),
+                &key_name,
                 encrypt_algorithm,
                 &nonce,
                 &additional_data,
@@ -768,7 +768,7 @@ fn raw_key_agreement_test() {
     // Check response
     assert_eq!(
         client
-            .psa_raw_key_agreement(agreement_alg, key_name.clone(), &peer_key)
+            .psa_raw_key_agreement(agreement_alg, &key_name, &peer_key)
             .expect("Failed key agreement"),
         shared_secret
     );
@@ -792,7 +792,7 @@ fn different_response_type_test() {
     ));
     let key_name = String::from("key-name");
     let err = client
-        .psa_destroy_key(key_name)
+        .psa_destroy_key(&key_name)
         .expect_err("Error was expected");
 
     assert!(matches!(
@@ -853,7 +853,7 @@ fn auth_value_test() {
     ));
     let key_name = String::from("key-name");
     client
-        .psa_destroy_key(key_name)
+        .psa_destroy_key(&key_name)
         .expect("Failed to call destroy key");
 
     let req = get_req_from_bytes(client.get_mock_write());
@@ -872,7 +872,7 @@ fn peer_credential_auth_test() {
     ));
     let key_name = String::from("key-name");
     client
-        .psa_destroy_key(key_name)
+        .psa_destroy_key(&key_name)
         .expect("Failed to call destroy key");
 
     let req = get_req_from_bytes(client.get_mock_write());
