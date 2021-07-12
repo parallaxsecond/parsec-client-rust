@@ -173,7 +173,7 @@ use zeroize::Zeroizing;
 ///};
 ///
 ///client
-///    .psa_generate_key(key_name.clone(), key_attrs)
+///    .psa_generate_key(&key_name, key_attrs)
 ///    .expect("Failed to create key!");
 ///```
 #[derive(Debug)]
@@ -469,11 +469,11 @@ impl BasicClient {
     ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_generate_key.html#specific-response-status-codes).
-    pub fn psa_generate_key(&self, key_name: String, key_attributes: Attributes) -> Result<()> {
+    pub fn psa_generate_key(&self, key_name: &str, key_attributes: Attributes) -> Result<()> {
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaGenerateKey {
-            key_name,
+            key_name: String::from(key_name),
             attributes: key_attributes,
         };
 
@@ -499,10 +499,12 @@ impl BasicClient {
     ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_destroy_key.html#specific-response-status-codes).
-    pub fn psa_destroy_key(&self, key_name: String) -> Result<()> {
+    pub fn psa_destroy_key(&self, key_name: &str) -> Result<()> {
         let crypto_provider = self.can_provide_crypto()?;
 
-        let op = PsaDestroyKey { key_name };
+        let op = PsaDestroyKey {
+            key_name: String::from(key_name),
+        };
 
         let _ = self.op_client.process_operation(
             NativeOperation::PsaDestroyKey(op),
@@ -541,7 +543,7 @@ impl BasicClient {
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_import_key.html#specific-response-status-codes).
     pub fn psa_import_key(
         &self,
-        key_name: String,
+        key_name: &str,
         key_material: &[u8],
         key_attributes: Attributes,
     ) -> Result<()> {
@@ -549,7 +551,7 @@ impl BasicClient {
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaImportKey {
-            key_name,
+            key_name: String::from(key_name),
             attributes: key_attributes,
             data: key_material,
         };
@@ -577,10 +579,12 @@ impl BasicClient {
     ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_export_public_key.html#specific-response-status-codes).
-    pub fn psa_export_public_key(&self, key_name: String) -> Result<Vec<u8>> {
+    pub fn psa_export_public_key(&self, key_name: &str) -> Result<Vec<u8>> {
         let crypto_provider = self.can_provide_crypto()?;
 
-        let op = PsaExportPublicKey { key_name };
+        let op = PsaExportPublicKey {
+            key_name: String::from(key_name),
+        };
 
         let res = self.op_client.process_operation(
             NativeOperation::PsaExportPublicKey(op),
@@ -611,10 +615,12 @@ impl BasicClient {
     ///
     /// See the operation-specific response codes returned by the service
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_export_key.html#specific-response-status-codes).
-    pub fn psa_export_key(&self, key_name: String) -> Result<Vec<u8>> {
+    pub fn psa_export_key(&self, key_name: &str) -> Result<Vec<u8>> {
         let crypto_provider = self.can_provide_crypto()?;
 
-        let op = PsaExportKey { key_name };
+        let op = PsaExportKey {
+            key_name: String::from(key_name),
+        };
 
         let res = self.op_client.process_operation(
             NativeOperation::PsaExportKey(op),
@@ -652,7 +658,7 @@ impl BasicClient {
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_sign_hash.html#specific-response-status-codes).
     pub fn psa_sign_hash(
         &self,
-        key_name: String,
+        key_name: &str,
         hash: &[u8],
         sign_algorithm: AsymmetricSignature,
     ) -> Result<Vec<u8>> {
@@ -660,7 +666,7 @@ impl BasicClient {
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaSignHash {
-            key_name,
+            key_name: String::from(key_name),
             alg: sign_algorithm,
             hash,
         };
@@ -701,7 +707,7 @@ impl BasicClient {
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_verify_hash.html#specific-response-status-codes).
     pub fn psa_verify_hash(
         &self,
-        key_name: String,
+        key_name: &str,
         hash: &[u8],
         sign_algorithm: AsymmetricSignature,
         signature: &[u8],
@@ -711,7 +717,7 @@ impl BasicClient {
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaVerifyHash {
-            key_name,
+            key_name: String::from(key_name),
             alg: sign_algorithm,
             hash,
             signature,
@@ -744,7 +750,7 @@ impl BasicClient {
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_sign_message.html#specific-response-status-codes).
     pub fn psa_sign_message(
         &self,
-        key_name: String,
+        key_name: &str,
         msg: &[u8],
         sign_algorithm: AsymmetricSignature,
     ) -> Result<Vec<u8>> {
@@ -752,7 +758,7 @@ impl BasicClient {
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaSignMessage {
-            key_name,
+            key_name: String::from(key_name),
             alg: sign_algorithm,
             message,
         };
@@ -790,7 +796,7 @@ impl BasicClient {
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_verify_message.html#specific-response-status-codes).
     pub fn psa_verify_message(
         &self,
-        key_name: String,
+        key_name: &str,
         msg: &[u8],
         sign_algorithm: AsymmetricSignature,
         signature: &[u8],
@@ -800,7 +806,7 @@ impl BasicClient {
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaVerifyMessage {
-            key_name,
+            key_name: String::from(key_name),
             alg: sign_algorithm,
             message,
             signature,
@@ -836,7 +842,7 @@ impl BasicClient {
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_asymmetric_encrypt.html#specific-response-status-codes).
     pub fn psa_asymmetric_encrypt(
         &self,
-        key_name: String,
+        key_name: &str,
         encrypt_alg: AsymmetricEncryption,
         plaintext: &[u8],
         salt: Option<&[u8]>,
@@ -845,7 +851,7 @@ impl BasicClient {
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaAsymEncrypt {
-            key_name,
+            key_name: String::from(key_name),
             alg: encrypt_alg,
             plaintext: plaintext.to_vec().into(),
             salt,
@@ -888,7 +894,7 @@ impl BasicClient {
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_asymmetric_decrypt.html#specific-response-status-codes).
     pub fn psa_asymmetric_decrypt(
         &self,
-        key_name: String,
+        key_name: &str,
         encrypt_alg: AsymmetricEncryption,
         ciphertext: &[u8],
         salt: Option<&[u8]>,
@@ -897,7 +903,7 @@ impl BasicClient {
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaAsymDecrypt {
-            key_name,
+            key_name: String::from(key_name),
             alg: encrypt_alg,
             ciphertext: Zeroizing::new(ciphertext.to_vec()),
             salt,
@@ -998,7 +1004,7 @@ impl BasicClient {
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_aead_encrypt.html#specific-response-status-codes).
     pub fn psa_aead_encrypt(
         &self,
-        key_name: String,
+        key_name: &str,
         encrypt_alg: Aead,
         nonce: &[u8],
         additional_data: &[u8],
@@ -1007,7 +1013,7 @@ impl BasicClient {
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaAeadEncrypt {
-            key_name,
+            key_name: String::from(key_name),
             alg: encrypt_alg,
             nonce: nonce.to_vec().into(),
             additional_data: additional_data.to_vec().into(),
@@ -1051,7 +1057,7 @@ impl BasicClient {
     /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/psa_aead_decrypt.html#specific-response-status-codes).
     pub fn psa_aead_decrypt(
         &self,
-        key_name: String,
+        key_name: &str,
         encrypt_alg: Aead,
         nonce: &[u8],
         additional_data: &[u8],
@@ -1060,7 +1066,7 @@ impl BasicClient {
         let crypto_provider = self.can_provide_crypto()?;
 
         let op = PsaAeadDecrypt {
-            key_name,
+            key_name: String::from(key_name),
             alg: encrypt_alg,
             nonce: nonce.to_vec().into(),
             additional_data: additional_data.to_vec().into(),
@@ -1103,12 +1109,12 @@ impl BasicClient {
     pub fn psa_raw_key_agreement(
         &self,
         alg: RawKeyAgreement,
-        private_key_name: String,
+        private_key_name: &str,
         peer_key: &[u8],
     ) -> Result<Vec<u8>> {
         let op = PsaRawKeyAgreement {
             alg,
-            private_key_name,
+            private_key_name: String::from(private_key_name),
             peer_key: Zeroizing::new(peer_key.to_vec()),
         };
         let crypto_provider = self.can_provide_crypto()?;
