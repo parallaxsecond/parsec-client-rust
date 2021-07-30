@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://crates.io/crates/parsec-client"><img alt="Crates.io" src="https://img.shields.io/crates/v/parsec-client"></a>
   <a href="https://docs.rs/parsec-client"><img src="https://docs.rs/parsec-client/badge.svg" alt="Code documentation"/></a>
-  <a href="https://codecov.io/gh/parallaxsecond/parsec-client-rust"><img src="https://codecov.io/gh/parallaxsecond/parsec-client-rust/branch/master/graph/badge.svg?token=PTSZ6HS2FF"/></a>
+  <a href="https://codecov.io/gh/parallaxsecond/parsec-client-rust"><img src="https://codecov.io/gh/parallaxsecond/parsec-client-rust/branch/main/graph/badge.svg?token=PTSZ6HS2FF"/></a>
 </p>
 
 This repository contains a Rust client for consuming the API provided by the [Parsec service](https://github.com/parallaxsecond/parsec).
