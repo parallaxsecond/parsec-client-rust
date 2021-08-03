@@ -140,7 +140,7 @@ fn delete_client_test() {
     )));
     let client_name = String::from("toto");
     client
-        .delete_client(client_name.clone())
+        .delete_client(&client_name)
         .expect("Failed to call destroy key");
 
     // Check request:
@@ -159,6 +159,19 @@ fn list_keys_test() {
     };
 
     let mut client: TestBasicClient = Default::default();
+    let mut usage_flags = UsageFlags::default();
+    let _ = usage_flags
+        .set_decrypt()
+        .set_export()
+        .set_copy()
+        .set_cache()
+        .set_encrypt()
+        .set_decrypt()
+        .set_sign_message()
+        .set_verify_message()
+        .set_sign_hash()
+        .set_verify_hash()
+        .set_derive();
     let key_info = vec![KeyInfo {
         provider_id: ProviderId::MbedCrypto,
         name: String::from("Foo"),
@@ -167,18 +180,7 @@ fn list_keys_test() {
             key_type: Type::RsaKeyPair,
             bits: 1024,
             policy: Policy {
-                usage_flags: UsageFlags {
-                    export: true,
-                    copy: true,
-                    cache: true,
-                    encrypt: true,
-                    decrypt: true,
-                    sign_message: true,
-                    verify_message: true,
-                    sign_hash: true,
-                    verify_hash: true,
-                    derive: true,
-                },
+                usage_flags,
                 permitted_algorithms: Algorithm::AsymmetricSignature(
                     AsymmetricSignature::RsaPkcs1v15Sign {
                         hash_alg: Hash::Sha256.into(),
@@ -224,23 +226,19 @@ fn psa_generate_key_test() {
         NativeResult::PsaGenerateKey(operations::psa_generate_key::Result {}),
     ));
     let key_name = String::from("key-name");
+    let mut usage_flags = UsageFlags::default();
+    let _ = usage_flags
+        .set_decrypt()
+        .set_export()
+        .set_copy()
+        .set_cache()
+        .set_decrypt();
     let key_attrs = Attributes {
         lifetime: Lifetime::Persistent,
         key_type: Type::Aes,
         bits: 192,
         policy: Policy {
-            usage_flags: UsageFlags {
-                export: true,
-                copy: true,
-                cache: true,
-                encrypt: false,
-                decrypt: true,
-                sign_message: false,
-                verify_message: false,
-                sign_hash: false,
-                verify_hash: false,
-                derive: false,
-            },
+            usage_flags,
             permitted_algorithms: Algorithm::Cipher(Cipher::Ctr),
         },
     };
@@ -292,23 +290,19 @@ fn psa_import_key_test() {
         operations::psa_import_key::Result {},
     )));
     let key_name = String::from("key-name");
+    let mut usage_flags = UsageFlags::default();
+    let _ = usage_flags
+        .set_decrypt()
+        .set_export()
+        .set_copy()
+        .set_cache()
+        .set_decrypt();
     let key_attrs = Attributes {
         lifetime: Lifetime::Persistent,
         key_type: Type::Aes,
         bits: 192,
         policy: Policy {
-            usage_flags: UsageFlags {
-                export: true,
-                copy: true,
-                cache: true,
-                encrypt: false,
-                decrypt: true,
-                sign_message: false,
-                verify_message: false,
-                sign_hash: false,
-                verify_hash: false,
-                derive: false,
-            },
+            usage_flags,
             permitted_algorithms: Algorithm::Cipher(Cipher::Ctr),
         },
     };
