@@ -10,12 +10,17 @@ This repository contains a Rust client for consuming the API provided by the [Pa
 The low-level functionality that this library uses for IPC is implemented in the [interface crate](https://github.com/parallaxsecond/parsec-interface-rs).
 
 When using the JWT-SVID authentication method, the client will expect the `SPIFFE_ENDPOINT_SOCKET` environment variable to contain the path of the Workload API endpoint.
+You will need to compile the crate with the `spiffe-auth` feature activated.
 See the [SPIFFE Workload Endpoint](https://github.com/spiffe/spiffe/blob/master/standards/SPIFFE_Workload_Endpoint.md#4-locating-the-endpoint) for more information.
 
 ## Locating the Parsec endpoint
 
 The Rust client follows the [service discovery](https://parallaxsecond.github.io/parsec-book/parsec_client/api_overview.html#service-discovery) policy
-to find the Parsec endpoint.
+to find the Parsec endpoint. For example if the socket is at `/tmp/parsec.sock`:
+
+```
+export PARSEC_SERVICE_ENDPOINT="unix:/tmp/parsec.sock"
+```
 
 ## License
 
