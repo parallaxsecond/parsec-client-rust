@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.13.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.13.0) (2021-08-04)
+
+[Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.12.0...0.13.0)
+
+**Implemented enhancements:**
+
+- Use &str for key names instead of String [\#81](https://github.com/parallaxsecond/parsec-client-rust/issues/81)
+- Investigate a SignClient for just-in-time key creation [\#70](https://github.com/parallaxsecond/parsec-client-rust/issues/70)
+- Modify interface to take parameters as reference [\#31](https://github.com/parallaxsecond/parsec-client-rust/issues/31)
+- Add SPIFFE authentication via the new crate [\#85](https://github.com/parallaxsecond/parsec-client-rust/pull/85) ([hug-dev](https://github.com/hug-dev))
+
+**Fixed bugs:**
+
+- Change Codecov badge to main branch [\#89](https://github.com/parallaxsecond/parsec-client-rust/pull/89) ([ionut-arm](https://github.com/ionut-arm))
+
+**Merged pull requests:**
+
+- Prepare for the release [\#90](https://github.com/parallaxsecond/parsec-client-rust/pull/90) ([hug-dev](https://github.com/hug-dev))
+- Add cargo-audit config file. [\#88](https://github.com/parallaxsecond/parsec-client-rust/pull/88) ([ionut-arm](https://github.com/ionut-arm))
+- Changed to use &str for key\_name parameters. [\#86](https://github.com/parallaxsecond/parsec-client-rust/pull/86) ([MattDavis00](https://github.com/MattDavis00))
+- Update psa-crypto [\#84](https://github.com/parallaxsecond/parsec-client-rust/pull/84) ([hug-dev](https://github.com/hug-dev))
+- Support for ps\_sign\_ and ps\_verify\_message Parsec operations. [\#83](https://github.com/parallaxsecond/parsec-client-rust/pull/83) ([RobertDrazkowskiGL](https://github.com/RobertDrazkowskiGL))
+- Add dependency on the newest \(git only at the moment\) parsec-interface. [\#82](https://github.com/parallaxsecond/parsec-client-rust/pull/82) ([RobertDrazkowskiGL](https://github.com/RobertDrazkowskiGL))
+- Add the CHANGELOG [\#80](https://github.com/parallaxsecond/parsec-client-rust/pull/80) ([hug-dev](https://github.com/hug-dev))
+- Update the interface to latest master [\#78](https://github.com/parallaxsecond/parsec-client-rust/pull/78) ([hug-dev](https://github.com/hug-dev))
+
 ## [0.12.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.12.0) (2021-03-18)
 
 [Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.11.0...0.12.0)
