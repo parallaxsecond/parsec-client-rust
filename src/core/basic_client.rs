@@ -83,9 +83,13 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
+    ///# Ok(())}
     ///```
     pub fn new(app_name: Option<String>) -> Result<Self> {
         let mut client = BasicClient {
@@ -108,9 +112,13 @@ impl BasicClient {
     /// # Example
     ///
     /// ```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///let client = BasicClient::new_naked();
-    ///let (major, minor) = client.ping().unwrap();
+    ///let (major, minor) = client.ping()?;
+    ///# Ok(())}
     /// ```
     pub fn new_naked() -> Self {
         BasicClient {
@@ -137,9 +145,16 @@ impl BasicClient {
     /// # Example
     ///
     /// ```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
+    ///use parsec_client::core::interface::requests::ProviderId;
     ///let mut client = BasicClient::new_naked();
-    ///client.set_default_auth(Some("main_client".to_string())).unwrap();
+    ///// Set the default authenticator but choose a specific provider.
+    ///client.set_implicit_provider(ProviderId::Pkcs11);
+    ///client.set_default_auth(Some("main_client".to_string()))?;
+    ///# Ok(())}
     /// ```
     pub fn set_default_auth(&mut self, app_name: Option<String>) -> Result<()> {
         let authenticators = self.list_authenticators()?;
@@ -179,12 +194,7 @@ impl BasicClient {
     ///
     /// # Example
     ///
-    /// ```no_run
-    ///use parsec_client::BasicClient;
-    ///use parsec_client::auth::Authentication;
-    ///let mut client = BasicClient::new_naked();
-    ///client.set_auth_data(Authentication::UnixPeerCredentials);
-    /// ```
+    /// See [`set_default_provider`].
     pub fn set_auth_data(&mut self, auth_data: Authentication) {
         self.auth_data = auth_data;
     }
@@ -194,11 +204,15 @@ impl BasicClient {
     /// # Example
     ///
     /// ```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::auth::Authentication;
     ///let mut client = BasicClient::new_naked();
     ///client.set_auth_data(Authentication::UnixPeerCredentials);
     ///assert_eq!(Authentication::UnixPeerCredentials, client.auth_data());
+    ///# Ok(())}
     /// ```
     pub fn auth_data(&self) -> Authentication {
         self.auth_data.clone()
@@ -214,9 +228,16 @@ impl BasicClient {
     /// # Example
     ///
     /// ```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
+    ///use parsec_client::auth::Authentication;
     ///let mut client = BasicClient::new_naked();
-    ///client.set_default_provider().unwrap();
+    ///// Use the default provider but use a specific authentication.
+    ///client.set_default_provider()?;
+    ///client.set_auth_data(Authentication::UnixPeerCredentials);
+    ///# Ok(())}
     /// ```
     pub fn set_default_provider(&mut self) -> Result<()> {
         let providers = self.list_providers()?;
@@ -232,12 +253,7 @@ impl BasicClient {
     ///
     /// # Example
     ///
-    /// ```no_run
-    ///use parsec_client::BasicClient;
-    ///use parsec_client::core::interface::requests::ProviderId;
-    ///let mut client = BasicClient::new_naked();
-    ///client.set_implicit_provider(ProviderId::Pkcs11);
-    /// ```
+    /// See [`set_default_auth`].
     pub fn set_implicit_provider(&mut self, provider: ProviderId) {
         self.implicit_provider = provider;
     }
@@ -247,11 +263,15 @@ impl BasicClient {
     /// # Example
     ///
     /// ```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::core::interface::requests::ProviderId;
     ///let mut client = BasicClient::new_naked();
     ///client.set_implicit_provider(ProviderId::Pkcs11);
     ///assert_eq!(ProviderId::Pkcs11, client.implicit_provider());
+    ///# Ok(())}
     /// ```
     pub fn implicit_provider(&self) -> ProviderId {
         self.implicit_provider
@@ -262,11 +282,22 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
-    ///use parsec_client::core::interface::requests::ProviderId;
+    ///use parsec_client::core::interface::requests::{Opcode, ProviderId};
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
-    ///let opcodes = client.list_opcodes(ProviderId::Pkcs11).unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
+    ///let opcodes = client.list_opcodes(ProviderId::Pkcs11)?;
+    ///if opcodes.contains(&Opcode::PsaGenerateRandom) {
+    ///    let random_bytes = client.psa_generate_random(10)?;
+    ///}
+    ///# Ok(())}
+    ///# Ok(())}
     ///```
     pub fn list_opcodes(&self, provider: ProviderId) -> Result<HashSet<Opcode>> {
         let res = self.op_client.process_operation(
@@ -291,10 +322,16 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
-    ///let providers = client.list_providers().unwrap();
+    ///let mut client: BasicClient = BasicClient::new_naked();
+    ///let providers = client.list_providers()?;
+    ///// Set the second most prioritary provider
+    ///client.set_implicit_provider(providers[1].id);
+    ///# Ok(())}
     ///```
     pub fn list_providers(&self) -> Result<Vec<ProviderInfo>> {
         let res = self.op_client.process_operation(
@@ -316,10 +353,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
-    ///let opcodes = client.list_authenticators().unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
+    ///let opcodes = client.list_authenticators()?;
+    ///# Ok(())}
     ///```
     pub fn list_authenticators(&self) -> Result<Vec<AuthenticatorInfo>> {
         let res = self.op_client.process_operation(
@@ -341,10 +382,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
-    ///let keys = client.list_keys().unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
+    ///let keys = client.list_keys()?;
+    ///# Ok(())}
     ///```
     pub fn list_keys(&self) -> Result<Vec<KeyInfo>> {
         let res = self.op_client.process_operation(
@@ -372,10 +417,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
-    ///let attributes = client.key_attributes("my_key").unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
+    ///let attributes = client.key_attributes("my_key")?;
+    ///# Ok(())}
     ///```
     pub fn key_attributes(&self, key_name: &str) -> Result<Attributes> {
         Ok(self
@@ -392,10 +441,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
-    ///let clients = client.list_clients().unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
+    ///let clients = client.list_clients()?;
+    ///# Ok(())}
     ///```
     pub fn list_clients(&self) -> Result<Vec<String>> {
         let res = self.op_client.process_operation(
@@ -417,10 +470,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
-    ///client.delete_client("main_client").unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
+    ///client.delete_client("main_client")?;
+    ///# Ok(())}
     ///```
     pub fn delete_client(&self, client: &str) -> Result<()> {
         let res = self.op_client.process_operation(
@@ -447,12 +504,7 @@ impl BasicClient {
     ///
     /// # Example
     ///
-    ///```no_run
-    ///use parsec_client::BasicClient;
-    ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
-    ///let version = client.ping().unwrap();
-    ///```
+    /// See [`new_naked`].
     pub fn ping(&self) -> Result<(u8, u8)> {
         let res = self.op_client.process_operation(
             NativeOperation::Ping(Ping {}),
@@ -484,11 +536,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::core::interface::operations::psa_key_attributes::{Attributes, Lifetime, Policy, Type, UsageFlags};
     ///use parsec_client::core::interface::operations::psa_algorithm::{AsymmetricSignature, Hash};
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
     ///let key_attrs = Attributes {
     ///    lifetime: Lifetime::Persistent,
     ///    key_type: Type::RsaKeyPair,
@@ -500,7 +555,8 @@ impl BasicClient {
     ///        }.into(),
     ///    },
     ///};
-    ///client.psa_generate_key("my_key", key_attrs).unwrap();
+    ///client.psa_generate_key("my_key", key_attrs)?;
+    ///# Ok(())}
     ///```
     pub fn psa_generate_key(&self, key_name: &str, key_attributes: Attributes) -> Result<()> {
         let crypto_provider = self.can_provide_crypto()?;
@@ -528,10 +584,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
-    ///client.psa_destroy_key("my_key").unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
+    ///client.psa_destroy_key("my_key")?;
+    ///# Ok(())}
     ///```
     pub fn psa_destroy_key(&self, key_name: &str) -> Result<()> {
         let crypto_provider = self.can_provide_crypto()?;
@@ -566,11 +626,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::core::interface::operations::psa_key_attributes::{Attributes, Lifetime, Policy, Type, UsageFlags, EccFamily};
     ///use parsec_client::core::interface::operations::psa_algorithm::{AsymmetricSignature, Hash};
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
     ///let ecc_private_key = vec![
     ///    0x26, 0xc8, 0x82, 0x9e, 0x22, 0xe3, 0x0c, 0xa6, 0x3d, 0x29, 0xf5, 0xf7, 0x27, 0x39, 0x58, 0x47,
     ///    0x41, 0x81, 0xf6, 0x57, 0x4f, 0xdb, 0xcb, 0x4d, 0xbb, 0xdd, 0x52, 0xff, 0x3a, 0xc0, 0xf6, 0x0d,
@@ -588,7 +651,8 @@ impl BasicClient {
     ///        }.into(),
     ///    },
     ///};
-    ///client.psa_import_key("my_key", &ecc_private_key, key_attrs).unwrap();
+    ///client.psa_import_key("my_key", &ecc_private_key, key_attrs)?;
+    ///# Ok(())}
     ///```
     pub fn psa_import_key(
         &self,
@@ -624,10 +688,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
     ///let public_key_data = client.psa_export_public_key("my_key");
+    ///# Ok(())}
     ///```
     pub fn psa_export_public_key(&self, key_name: &str) -> Result<Vec<u8>> {
         let crypto_provider = self.can_provide_crypto()?;
@@ -661,10 +729,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
     ///let key_data = client.psa_export_key("my_key");
+    ///# Ok(())}
     ///```
     pub fn psa_export_key(&self, key_name: &str) -> Result<Vec<u8>> {
         let crypto_provider = self.can_provide_crypto()?;
@@ -703,11 +775,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::core::interface::operations::psa_key_attributes::{Attributes, Lifetime, Policy, Type, UsageFlags};
     ///use parsec_client::core::interface::operations::psa_algorithm::{AsymmetricSignature, Hash};
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
     ///// Hash of a message pre-calculated with SHA-256.
     ///let hash = vec![
     ///  0x69, 0x3E, 0xDB, 0x1B, 0x22, 0x79, 0x03, 0xF4, 0xC0, 0xBF, 0xD6, 0x91, 0x76, 0x37, 0x84, 0xA2,
@@ -715,7 +790,8 @@ impl BasicClient {
     ///];
     ///let signature = client.psa_sign_hash("my_key", &hash, AsymmetricSignature::RsaPkcs1v15Sign {
     ///hash_alg: Hash::Sha256.into(),
-    ///}).unwrap();
+    ///})?;
+    ///# Ok(())}
     ///```
     pub fn psa_sign_hash(
         &self,
@@ -762,11 +838,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::core::interface::operations::psa_key_attributes::{Attributes, Lifetime, Policy, Type, UsageFlags};
     ///use parsec_client::core::interface::operations::psa_algorithm::{AsymmetricSignature, Hash};
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
     ///// Hash of a message pre-calculated with SHA-256.
     ///let hash = vec![
     ///    0x69, 0x3E, 0xDB, 0x1B, 0x22, 0x79, 0x03, 0xF4, 0xC0, 0xBF, 0xD6, 0x91, 0x76, 0x37, 0x84, 0xA2,
@@ -775,8 +854,9 @@ impl BasicClient {
     ///let alg = AsymmetricSignature::RsaPkcs1v15Sign {
     ///    hash_alg: Hash::Sha256.into(),
     ///};
-    ///let signature = client.psa_sign_hash("my_key", &hash, alg).unwrap();
-    ///client.psa_verify_hash("my_key", &hash, alg, &signature).unwrap();
+    ///let signature = client.psa_sign_hash("my_key", &hash, alg)?;
+    ///client.psa_verify_hash("my_key", &hash, alg, &signature)?;
+    ///# Ok(())}
     ///```
     pub fn psa_verify_hash(
         &self,
@@ -817,11 +897,14 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::core::interface::operations::psa_key_attributes::{Attributes, Lifetime, Policy, Type, UsageFlags};
     ///use parsec_client::core::interface::operations::psa_algorithm::{AsymmetricSignature, Hash};
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
     ///let message = "This is the message to sign which can be of any size!".as_bytes();
     ///let signature = client.psa_sign_message(
     ///    "my_key",
@@ -829,7 +912,8 @@ impl BasicClient {
     ///    AsymmetricSignature::RsaPkcs1v15Sign {
     ///        hash_alg: Hash::Sha256.into(),
     ///    }
-    ///).unwrap();
+    ///)?;
+    ///# Ok(())}
     ///```
     pub fn psa_sign_message(
         &self,
@@ -873,17 +957,21 @@ impl BasicClient {
     /// # Example
     ///
     ///```no_run
+    ///# use std::error::Error;
+    ///#
+    ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::core::interface::operations::psa_key_attributes::{Attributes, Lifetime, Policy, Type, UsageFlags};
     ///use parsec_client::core::interface::operations::psa_algorithm::{AsymmetricSignature, Hash};
     ///
-    ///let client: BasicClient = BasicClient::new(None).unwrap();
+    ///let client: BasicClient = BasicClient::new(None)?;
     ///let message = "This is the message to sign which can be of any size!".as_bytes();
     ///let alg = AsymmetricSignature::RsaPkcs1v15Sign {
     ///    hash_alg: Hash::Sha256.into(),
     ///};
-    ///let signature = client.psa_sign_message("my_key", message, alg).unwrap();
-    ///client.psa_verify_message("my_key", message, alg, &signature).unwrap();
+    ///let signature = client.psa_sign_message("my_key", message, alg)?;
+    ///client.psa_verify_message("my_key", message, alg, &signature)?;
+    ///# Ok(())}
     ///```
     pub fn psa_verify_message(
         &self,
@@ -1172,6 +1260,10 @@ impl BasicClient {
     /// Generates a sequence of random bytes and returns them to the user.
     ///
     /// If this method returns an error, no bytes will have been generated.
+    ///
+    /// # Example
+    ///
+    /// See [`list_opcodes`].
     pub fn psa_generate_random(&self, nbytes: usize) -> Result<Vec<u8>> {
         let crypto_provider = self.can_provide_crypto()?;
 
