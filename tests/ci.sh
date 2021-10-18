@@ -33,7 +33,9 @@ fi
 CURRENT_PATH=$(pwd)
 cd parsec-mock-0.1.1
 python parsec_mock/parsec_mock.py --parsec-socket $CURRENT_PATH/parsec_mock.sock &
-sleep 5
+while [[ ! -S $CURRENT_PATH/parsec_mock.sock ]]; do
+	sleep 5
+done
 cd ..
 export PARSEC_SERVICE_ENDPOINT="unix://$CURRENT_PATH/parsec_mock.sock"
 
