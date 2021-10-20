@@ -117,16 +117,16 @@ impl BasicClient {
     ///#
     ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
-    ///let client = BasicClient::new_naked();
+    ///let client = BasicClient::new_naked()?;
     ///let (major, minor) = client.ping()?;
     ///# Ok(())}
     /// ```
-    pub fn new_naked() -> Self {
-        BasicClient {
-            op_client: Default::default(),
+    pub fn new_naked() -> Result<Self> {
+        Ok(BasicClient {
+            op_client: OperationClient::new()?,
             auth_data: Authentication::None,
             implicit_provider: ProviderId::Core,
-        }
+        })
     }
 
     /// Query the service for the list of authenticators provided and use the first one as default
@@ -151,7 +151,7 @@ impl BasicClient {
     ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::core::interface::requests::ProviderId;
-    ///let mut client = BasicClient::new_naked();
+    ///let mut client = BasicClient::new_naked()?;
     ///// Set the default authenticator but choose a specific provider.
     ///client.set_implicit_provider(ProviderId::Pkcs11);
     ///client.set_default_auth(Some("main_client".to_string()))?;
@@ -210,7 +210,7 @@ impl BasicClient {
     ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::auth::Authentication;
-    ///let mut client = BasicClient::new_naked();
+    ///let mut client = BasicClient::new_naked()?;
     ///client.set_auth_data(Authentication::UnixPeerCredentials);
     ///assert_eq!(Authentication::UnixPeerCredentials, client.auth_data());
     ///# Ok(())}
@@ -234,7 +234,7 @@ impl BasicClient {
     ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::auth::Authentication;
-    ///let mut client = BasicClient::new_naked();
+    ///let mut client = BasicClient::new_naked()?;
     ///// Use the default provider but use a specific authentication.
     ///client.set_default_provider()?;
     ///client.set_auth_data(Authentication::UnixPeerCredentials);
@@ -269,7 +269,7 @@ impl BasicClient {
     ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///use parsec_client::core::interface::requests::ProviderId;
-    ///let mut client = BasicClient::new_naked();
+    ///let mut client = BasicClient::new_naked()?;
     ///client.set_implicit_provider(ProviderId::Pkcs11);
     ///assert_eq!(ProviderId::Pkcs11, client.implicit_provider());
     ///# Ok(())}
@@ -328,7 +328,7 @@ impl BasicClient {
     ///# fn main() -> Result<(), Box<dyn Error>> {
     ///use parsec_client::BasicClient;
     ///
-    ///let mut client: BasicClient = BasicClient::new_naked();
+    ///let mut client: BasicClient = BasicClient::new_naked()?;
     ///let providers = client.list_providers()?;
     ///// Set the second most prioritary provider
     ///client.set_implicit_provider(providers[1].id);
@@ -1313,6 +1313,16 @@ impl BasicClient {
         match self.implicit_provider {
             ProviderId::Core => Err(Error::Client(ClientErrorKind::InvalidProvider)),
             crypto_provider => Ok(crypto_provider),
+        }
+    }
+}
+
+impl Default for BasicClient {
+    fn default() -> Self {
+        BasicClient {
+            op_client: Default::default(),
+            auth_data: Authentication::None,
+            implicit_provider: ProviderId::Core,
         }
     }
 }

@@ -57,22 +57,6 @@ fn get_operation_from_req_bytes(bytes: Vec<u8>) -> NativeOperation {
 }
 
 #[test]
-fn ping_test() {
-    let mut client: TestBasicClient = Default::default();
-    client.set_mock_read(&get_response_bytes_from_result(NativeResult::Ping(
-        operations::ping::Result {
-            wire_protocol_version_maj: 1,
-            wire_protocol_version_min: 0,
-        },
-    )));
-    // Check request:
-    // Ping request is empty so no checking to be done
-
-    // Check response:
-    assert_eq!(client.ping().expect("Ping failed"), (1, 0));
-}
-
-#[test]
 fn list_provider_test() {
     let mut client: TestBasicClient = Default::default();
     let provider_info = vec![ProviderInfo {
