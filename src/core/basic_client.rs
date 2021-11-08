@@ -5,6 +5,7 @@ use super::operation_client::OperationClient;
 use crate::auth::Authentication;
 use crate::error::{ClientErrorKind, Error, Result};
 use log::{debug, warn};
+use parsec_interface::operations::can_do_crypto::{CheckType, Operation as CanDoCrypto};
 use parsec_interface::operations::delete_client::Operation as DeleteClient;
 use parsec_interface::operations::list_authenticators::{
     AuthenticatorInfo, Operation as ListAuthenticators,
@@ -1282,6 +1283,30 @@ impl BasicClient {
             // changes happen in the interface
             Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
         }
+    }
+
+    /// **[Capability Discovery Operation]** Check if attributes are supported.
+    ///
+    /// Checks if the given attributes are supported for the given type of operation.
+    ///
+    /// #Errors
+    ///
+    /// This operation will either return Ok(()) or Err(PsaErrorNotSupported) indicating whether the attributes are supported.
+    ///
+    /// See the operation-specific response codes returned by the service
+    /// [here](https://parallaxsecond.github.io/parsec-book/parsec_client/operations/can_do_crypto.html#specific-response-status-codes).
+    pub fn can_do_crypto(&self, check_type: CheckType, attributes: Attributes) -> Result<()> {
+        let crypto_provider = self.can_provide_crypto()?;
+        let op = CanDoCrypto {
+            check_type,
+            attributes,
+        };
+        let _ = self.op_client.process_operation(
+            NativeOperation::CanDoCrypto(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+        Ok(())
     }
 
     fn can_provide_crypto(&self) -> Result<ProviderId> {
