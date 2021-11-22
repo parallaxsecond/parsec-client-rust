@@ -22,10 +22,12 @@ use parsec_interface::operations::prepare_key_attestation::{
 use parsec_interface::operations::psa_aead_decrypt::Operation as PsaAeadDecrypt;
 use parsec_interface::operations::psa_aead_encrypt::Operation as PsaAeadEncrypt;
 use parsec_interface::operations::psa_algorithm::{
-    Aead, AsymmetricEncryption, AsymmetricSignature, Hash, RawKeyAgreement,
+    Aead, AsymmetricEncryption, AsymmetricSignature, Cipher, Hash, RawKeyAgreement,
 };
 use parsec_interface::operations::psa_asymmetric_decrypt::Operation as PsaAsymDecrypt;
 use parsec_interface::operations::psa_asymmetric_encrypt::Operation as PsaAsymEncrypt;
+use parsec_interface::operations::psa_cipher_decrypt::Operation as PsaCipherDecrypt;
+use parsec_interface::operations::psa_cipher_encrypt::Operation as PsaCipherEncrypt;
 use parsec_interface::operations::psa_destroy_key::Operation as PsaDestroyKey;
 use parsec_interface::operations::psa_export_key::Operation as PsaExportKey;
 use parsec_interface::operations::psa_export_public_key::Operation as PsaExportPublicKey;
@@ -1216,6 +1218,78 @@ impl BasicClient {
         )?;
 
         if let NativeResult::PsaAeadDecrypt(res) = decrypt_res {
+            Ok(res.plaintext.to_vec())
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Cryptographic Operation]** Encrypt a short message with a symmetric cipher.
+    /// 
+    /// The key intended for decrypting **must** have its `encrypt` flag set
+    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
+    /// 
+    /// This function will encrypt a short message with a random initialisation vector (IV).
+    pub fn psa_cipher_encrypt(
+        &self,
+        key_name: String,
+        alg: Cipher,
+        plaintext: &[u8],
+    ) -> Result<Vec<u8>> {
+        let crypto_provider = self.can_provide_crypto()?;
+
+        let op = PsaCipherEncrypt {
+            key_name,
+            alg,
+            plaintext: plaintext.to_vec().into(),
+        };
+
+        let res = self.op_client.process_operation(
+            NativeOperation::PsaCipherEncrypt(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+
+        if let NativeResult::PsaCipherEncrypt(res) = res {
+            Ok(res.ciphertext.to_vec())
+        } else {
+            // Should really not be reached given the checks we do, but it's not impossible if some
+            // changes happen in the interface
+            Err(Error::Client(ClientErrorKind::InvalidServiceResponseType))
+        }
+    }
+
+    /// **[Cryptographic Operation]** Decrypt a short message with a symmetric cipher.
+    /// 
+    /// The key intended for decrypting **must** have its `decrypt` flag set
+    /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
+    /// 
+    /// `ciphertext` must be the IV followed by the ciphertext.
+    /// 
+    /// This function will decrypt a short message using the provided initialisation vector (IV).
+    pub fn psa_cipher_decrypt(
+        &self,
+        key_name: String,
+        alg: Cipher,
+        ciphertext: &[u8],
+    ) -> Result<Vec<u8>> {
+        let crypto_provider = self.can_provide_crypto()?;
+
+        let op = PsaCipherDecrypt {
+            key_name,
+            alg,
+            ciphertext: ciphertext.to_vec().into(),
+        };
+
+        let res = self.op_client.process_operation(
+            NativeOperation::PsaCipherDecrypt(op),
+            crypto_provider,
+            &self.auth_data,
+        )?;
+
+        if let NativeResult::PsaCipherDecrypt(res) = res {
             Ok(res.plaintext.to_vec())
         } else {
             // Should really not be reached given the checks we do, but it's not impossible if some
