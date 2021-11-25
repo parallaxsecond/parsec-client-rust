@@ -1228,7 +1228,7 @@ impl BasicClient {
 
     /// **[Cryptographic Operation]** Encrypt a short message with a symmetric cipher.
     ///
-    /// The key intended for decrypting **must** have its `encrypt` flag set
+    /// The key intended for encrypting **must** have its `encrypt` flag set
     /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
     ///
     /// This function will encrypt a short message with a random initialisation vector (IV).
