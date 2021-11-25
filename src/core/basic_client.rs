@@ -1227,10 +1227,10 @@ impl BasicClient {
     }
 
     /// **[Cryptographic Operation]** Encrypt a short message with a symmetric cipher.
-    /// 
+    ///
     /// The key intended for decrypting **must** have its `encrypt` flag set
     /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
-    /// 
+    ///
     /// This function will encrypt a short message with a random initialisation vector (IV).
     pub fn psa_cipher_encrypt(
         &self,
@@ -1262,12 +1262,12 @@ impl BasicClient {
     }
 
     /// **[Cryptographic Operation]** Decrypt a short message with a symmetric cipher.
-    /// 
+    ///
     /// The key intended for decrypting **must** have its `decrypt` flag set
     /// to `true` in its [key policy](https://docs.rs/parsec-interface/*/parsec_interface/operations/psa_key_attributes/struct.Policy.html).
-    /// 
+    ///
     /// `ciphertext` must be the IV followed by the ciphertext.
-    /// 
+    ///
     /// This function will decrypt a short message using the provided initialisation vector (IV).
     pub fn psa_cipher_decrypt(
         &self,
