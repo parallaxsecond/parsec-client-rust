@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.14.1](https://github.com/parallaxsecond/parsec-client-rust/tree/0.14.1) (2022-09-12)
+
+[Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.14.0...0.14.1)
+
+**Merged pull requests:**
+
+- Bump Crates' versions [\#105](https://github.com/parallaxsecond/parsec-client-rust/pull/105) ([mohamedasaker-arm](https://github.com/mohamedasaker-arm))
+- Build parse-interface with deprecated primitive feature changes [\#104](https://github.com/parallaxsecond/parsec-client-rust/pull/104) ([mohamedasaker-arm](https://github.com/mohamedasaker-arm))
+
+## [0.14.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.14.0) (2022-02-15)
+
+[Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.13.0...0.14.0)
+
+**Implemented enhancements:**
+
+- Add activate credential attestation methods [\#100](https://github.com/parallaxsecond/parsec-client-rust/pull/100) ([ionut-arm](https://github.com/ionut-arm))
+
+**Merged pull requests:**
+
+- Prepare for new version of client [\#102](https://github.com/parallaxsecond/parsec-client-rust/pull/102) ([ionut-arm](https://github.com/ionut-arm))
+- Add PsaCipherEncrypt and PsaCipherDecrypt operations [\#101](https://github.com/parallaxsecond/parsec-client-rust/pull/101) ([akazimierskigl](https://github.com/akazimierskigl))
+- Merge can-do-crypto branch into main [\#98](https://github.com/parallaxsecond/parsec-client-rust/pull/98) ([anta5010](https://github.com/anta5010))
+- Use the main branch of Parsec-interface [\#97](https://github.com/parallaxsecond/parsec-client-rust/pull/97) ([anta5010](https://github.com/anta5010))
+- Merge origin/main into can-do-crypto  [\#96](https://github.com/parallaxsecond/parsec-client-rust/pull/96) ([anta5010](https://github.com/anta5010))
+- Use Parsec Mock for testing [\#95](https://github.com/parallaxsecond/parsec-client-rust/pull/95) ([hug-dev](https://github.com/hug-dev))
+- Bump prost and spiffe for cargo-audit [\#94](https://github.com/parallaxsecond/parsec-client-rust/pull/94) ([hug-dev](https://github.com/hug-dev))
+- Added CanDoCrypto to basic client. [\#93](https://github.com/parallaxsecond/parsec-client-rust/pull/93) ([Kakemone](https://github.com/Kakemone))
+- Update CHANGELOG [\#92](https://github.com/parallaxsecond/parsec-client-rust/pull/92) ([hug-dev](https://github.com/hug-dev))
+
 ## [0.13.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.13.0) (2021-08-04)
 
 [Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.12.0...0.13.0)
@@ -24,7 +53,6 @@
 - Support for ps\_sign\_ and ps\_verify\_message Parsec operations. [\#83](https://github.com/parallaxsecond/parsec-client-rust/pull/83) ([RobertDrazkowskiGL](https://github.com/RobertDrazkowskiGL))
 - Add dependency on the newest \(git only at the moment\) parsec-interface. [\#82](https://github.com/parallaxsecond/parsec-client-rust/pull/82) ([RobertDrazkowskiGL](https://github.com/RobertDrazkowskiGL))
 - Add the CHANGELOG [\#80](https://github.com/parallaxsecond/parsec-client-rust/pull/80) ([hug-dev](https://github.com/hug-dev))
-- Update the interface to latest master [\#78](https://github.com/parallaxsecond/parsec-client-rust/pull/78) ([hug-dev](https://github.com/hug-dev))
 
 ## [0.12.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.12.0) (2021-03-18)
 
@@ -110,7 +138,7 @@
 - Added raw key agreement and test [\#46](https://github.com/parallaxsecond/parsec-client-rust/pull/46) ([sbailey-arm](https://github.com/sbailey-arm))
 - Added aead encrypt and decrypt [\#44](https://github.com/parallaxsecond/parsec-client-rust/pull/44) ([sbailey-arm](https://github.com/sbailey-arm))
 - Add support for ListAuthenticators operation [\#43](https://github.com/parallaxsecond/parsec-client-rust/pull/43) ([joechrisellis](https://github.com/joechrisellis))
-- Add Rust client support for `psa\_generate\_random` operation [\#42](https://github.com/parallaxsecond/parsec-client-rust/pull/42) ([joechrisellis](https://github.com/joechrisellis))
+- Add Rust client support for `psa_generate_random` operation [\#42](https://github.com/parallaxsecond/parsec-client-rust/pull/42) ([joechrisellis](https://github.com/joechrisellis))
 
 ## [0.7.1](https://github.com/parallaxsecond/parsec-client-rust/tree/0.7.1) (2020-07-22)
 
@@ -119,11 +147,7 @@
 **Implemented enhancements:**
 
 - Publish a new version [\#40](https://github.com/parallaxsecond/parsec-client-rust/pull/40) ([hug-dev](https://github.com/hug-dev))
-- Implement `Error` and `Display` traits for `parsec\_client::error::Error` [\#39](https://github.com/parallaxsecond/parsec-client-rust/pull/39) ([joechrisellis](https://github.com/joechrisellis))
-
-**Merged pull requests:**
-
-- Added asymmetric encrypt and decrypt [\#36](https://github.com/parallaxsecond/parsec-client-rust/pull/36) ([sbailey-arm](https://github.com/sbailey-arm))
+- Implement `Error` and `Display` traits for `parsec_client::error::Error` [\#39](https://github.com/parallaxsecond/parsec-client-rust/pull/39) ([joechrisellis](https://github.com/joechrisellis))
 
 ## [0.7.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.7.0) (2020-07-15)
 
@@ -136,6 +160,10 @@
 ## [0.6.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.6.0) (2020-07-07)
 
 [Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.5.0...0.6.0)
+
+**Merged pull requests:**
+
+- Added asymmetric encrypt and decrypt [\#36](https://github.com/parallaxsecond/parsec-client-rust/pull/36) ([sbailey-arm](https://github.com/sbailey-arm))
 
 ## [0.5.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.5.0) (2020-07-02)
 
@@ -192,7 +220,7 @@
 - Implement client-specific error structures [\#5](https://github.com/parallaxsecond/parsec-client-rust/issues/5)
 - Implement configuration [\#3](https://github.com/parallaxsecond/parsec-client-rust/issues/3)
 - Add methods for modifying timeout of IPC handlers [\#24](https://github.com/parallaxsecond/parsec-client-rust/pull/24) ([ionut-arm](https://github.com/ionut-arm))
-- Make `implicit\_provider` optional [\#23](https://github.com/parallaxsecond/parsec-client-rust/pull/23) ([ionut-arm](https://github.com/ionut-arm))
+- Make `implicit_provider` optional [\#23](https://github.com/parallaxsecond/parsec-client-rust/pull/23) ([ionut-arm](https://github.com/ionut-arm))
 - Add getters for auth\_data and implicit\_provider [\#22](https://github.com/parallaxsecond/parsec-client-rust/pull/22) ([ionut-arm](https://github.com/ionut-arm))
 - Add contributing guidelines link [\#21](https://github.com/parallaxsecond/parsec-client-rust/pull/21) ([hug-dev](https://github.com/hug-dev))
 - Refactor low level clients [\#20](https://github.com/parallaxsecond/parsec-client-rust/pull/20) ([ionut-arm](https://github.com/ionut-arm))
@@ -205,7 +233,7 @@
 
 **Closed issues:**
 
-- Rename methods to contain `psa\_` prefix [\#17](https://github.com/parallaxsecond/parsec-client-rust/issues/17)
+- Rename methods to contain `psa_` prefix [\#17](https://github.com/parallaxsecond/parsec-client-rust/issues/17)
 - Improve documentation [\#2](https://github.com/parallaxsecond/parsec-client-rust/issues/2)
 
 **Merged pull requests:**
