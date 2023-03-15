@@ -1,6 +1,6 @@
 [package]
 name = "parsec-client"
-version = "0.14.1"
+version = "0.15.0"
 authors = ["Contributors to the Parsec project"]
 description = "Parsec Client library for the Rust ecosystem"
 license = "Apache-2.0"
