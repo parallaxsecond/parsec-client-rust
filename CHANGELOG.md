@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.15.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.15.0) (2023-01-04)
+
+[Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.14.1...0.15.0)
+
+**Merged pull requests:**
+
+- Update to remove const\_err [\#107](https://github.com/parallaxsecond/parsec-client-rust/pull/107) ([marcsvll](https://github.com/marcsvll))
+
 ## [0.14.1](https://github.com/parallaxsecond/parsec-client-rust/tree/0.14.1) (2022-09-12)
 
 [Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.14.0...0.14.1)
