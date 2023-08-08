@@ -49,7 +49,7 @@ impl TryFrom<&Authentication> for RequestAuth {
             Authentication::None => Ok(RequestAuth::new(Vec::new())),
             Authentication::Direct(name) => Ok(RequestAuth::new(name.bytes().collect())),
             Authentication::UnixPeerCredentials => {
-                let current_uid = users::get_current_uid();
+                let current_uid: libc::uid_t = unsafe { libc::getuid() };
                 Ok(RequestAuth::new(current_uid.to_le_bytes().to_vec()))
             }
             #[cfg(feature = "spiffe-auth")]
