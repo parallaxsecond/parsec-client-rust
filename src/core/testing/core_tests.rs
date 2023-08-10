@@ -854,8 +854,9 @@ fn peer_credential_auth_test() {
         .expect("Failed to call destroy key");
 
     let req = get_req_from_bytes(client.get_mock_write());
+    let current_uid: libc::uid_t = unsafe { libc::getuid() };
     assert_eq!(
-        &users::get_current_uid().to_le_bytes().to_vec(),
+        &current_uid.to_le_bytes().to_vec(),
         req.auth.buffer.expose_secret()
     );
 }
