@@ -19,11 +19,7 @@ show_tree = true # Show inverse dependency trees along with advisories
 
 # Target Configuration
 [target]
-arch = "x86_64" # Ignore advisories for CPU architectures other than this one
 os = "linux" # Ignore advisories for operating systems other than this one
-
-[packages]
-source = "all" # "all", "public" or "local"
 
 [yanked]
 enabled = true # Warn for yanked crates in Cargo.lock
