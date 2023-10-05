@@ -1,5 +1,5 @@
 [advisories]
-ignore = []
+ignore = ["RUSTSEC-2021-0139"] # Remove when spiffe is upgraded
 informational_warnings = ["unmaintained"] # warn for categories of informational advisories
 severity_threshold = "low" # CVSS severity ("none", "low", "medium", "high", "critical")
 
