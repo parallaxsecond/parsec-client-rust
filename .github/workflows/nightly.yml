@@ -48,7 +48,7 @@ jobs:
     name: Calculate coverage from tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
         with:
           ref: "${{ github.event.inputs.rev }}"
       - name: Execute tarpaulin
