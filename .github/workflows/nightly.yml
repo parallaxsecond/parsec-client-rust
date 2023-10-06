@@ -52,4 +52,10 @@ jobs:
         with:
           ref: "${{ github.event.inputs.rev }}"
       - name: Execute tarpaulin
-        run: ./tests/coverage.sh
+        run: |
+          curl -s -N -L https://github.com/parallaxsecond/parsec-mock/archive/refs/tags/0.1.1.tar.gz | tar xz
+          cd parsec-mock-0.1.1/
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          cd ..
+          ./tests/coverage.sh
