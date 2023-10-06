@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.16.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.16.0) (2023-10-06)
+
+[Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.15.0...0.16.0)
+
+**Merged pull requests:**
+
+- Bump parsec-interface to 0.29.0 [\#115](https://github.com/parallaxsecond/parsec-client-rust/pull/115) ([tgonzalezorlandoarm](https://github.com/tgonzalezorlandoarm))
+- ci/nightly: use actions/checkoutv2 for coverage builds [\#114](https://github.com/parallaxsecond/parsec-client-rust/pull/114) ([tgonzalezorlandoarm](https://github.com/tgonzalezorlandoarm))
+- ci/nightly: Run parsec-mock for coverage tests [\#113](https://github.com/parallaxsecond/parsec-client-rust/pull/113) ([tgonzalezorlandoarm](https://github.com/tgonzalezorlandoarm))
+- .cargo/audit: Ignore unmaintained ansi\_term util spiffe is upgraded [\#112](https://github.com/parallaxsecond/parsec-client-rust/pull/112) ([tgonzalezorlandoarm](https://github.com/tgonzalezorlandoarm))
+- .cargo/audit: Remove deprecated packages field [\#111](https://github.com/parallaxsecond/parsec-client-rust/pull/111) ([tgonzalezorlandoarm](https://github.com/tgonzalezorlandoarm))
+- Remove unmaintained 'users' crate [\#110](https://github.com/parallaxsecond/parsec-client-rust/pull/110) ([tgonzalezorlandoarm](https://github.com/tgonzalezorlandoarm))
+
 ## [0.15.0](https://github.com/parallaxsecond/parsec-client-rust/tree/0.15.0) (2023-01-04)
 
 [Full Changelog](https://github.com/parallaxsecond/parsec-client-rust/compare/0.14.1...0.15.0)
