@@ -10,6 +10,7 @@ keywords = ["parsec"]
 categories = ["development-tools"]
 edition = "2018"
 documentation = "https://docs.rs/crate/parsec-client"
+rust-version = "1.66.0"
 
 [dependencies]
 parsec-interface = "0.29.0"
