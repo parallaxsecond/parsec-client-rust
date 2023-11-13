@@ -7,16 +7,24 @@ jobs:
     name: Build and check formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+      - uses: actions/checkout@v3
+      - name: Install latest Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          python-version: 3.7
+          toolchain: stable
+          rustflags: ""
       - name: Download Parsec Mock, install dependencies and execute all tests
-        run: |
-          curl -s -N -L https://github.com/parallaxsecond/parsec-mock/archive/refs/tags/0.1.1.tar.gz | tar xz
-          cd parsec-mock-0.1.1/
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          cd ..
-          ./tests/ci.sh
+        uses: ./.github/actions/mock_tests
+
+  build-msrv:
+    name: MSRV - Build and check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Rust MSRV
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.66.0
+          rustflags: ""
+      - name: Download Parsec Mock, install dependencies and execute all tests
+        uses: ./.github/actions/mock_tests
