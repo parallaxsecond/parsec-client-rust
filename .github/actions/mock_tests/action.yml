@@ -1,0 +1,19 @@
+name: "Build and check formatting and Mock Tests"
+description: "Download Parsec Mock, install dependencies and execute all tests"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Download Parsec Mock, install dependencies and execute all tests
+      run: |
+        curl -s -N -L https://github.com/parallaxsecond/parsec-mock/archive/refs/tags/0.1.1.tar.gz | tar xz
+        cd parsec-mock-0.1.1/
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        cd ..
+        ./tests/ci.sh
+      shell: bash
